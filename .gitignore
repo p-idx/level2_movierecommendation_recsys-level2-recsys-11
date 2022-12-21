@@ -206,3 +206,4 @@ poetry.toml
 *.sh
 *.ipynb
 data/
+*.pt
