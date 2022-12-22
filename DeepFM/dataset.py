@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from functools import reduce
 from tqdm import tqdm
-
-from config import CFG
+import torch
+from torch.utils.data import DataLoader, Dataset
 
 
 def negative_sampling(raw_rating_df, items, num_negative):
@@ -23,84 +23,35 @@ def negative_sampling(raw_rating_df, items, num_negative):
         else:
             user_neg_dfs = pd.concat([user_neg_dfs, i_user_neg_df], axis=0, sort=False)
     
-    raw_rating_df = pd.concat(raw_rating_df, user_neg_dfs, axis=0, sort=False)
+    raw_rating_df = pd.concat([raw_rating_df, user_neg_dfs], axis=0, sort=False)
 
     return raw_rating_df
 
 
-def preprocess(CFG):
-    print('Preprocessing...')
+def preprocess(args):
+    joined_rating_df = pd.read_csv('../data/train/joined_df')
 
-    # rating_df 생성
-    rating_path = os.path.join(CFG.datapath, 'train', 'train_ratings.csv')
-    raw_rating_df = pd.read_csv(rating_path)
-    
-    # implicit feedback
-    raw_rating_df['rating'] = 1.0
-    raw_rating_df.drop(['time'], axis=1, inplace=True)
-    print('Creating negative instances...')
+    # genre, writer, director, year, title index mapping
+    genre_dict = {genre:i for i, genre in enumerate(joined_rating_df['genre'].unique())}
+    joined_rating_df['genre'] = joined_rating_df['genre'].map(genre_dict)
 
-    users = set(raw_rating_df.loc[:, 'user'])
-    items = set(raw_rating_df.loc[:, 'item'])
+    writer_dict = {writer:i for i, writer in enumerate(joined_rating_df['writer'].unique())}
+    joined_rating_df['writer'] = joined_rating_df['writer'].map(writer_dict)
 
-    raw_rating_df = negative_sampling(raw_rating_df, items, CFG.num_negative)
+    director_dict = {director:i for i, director in enumerate(joined_rating_df['director'].unique())}
+    joined_rating_df['director'] = joined_rating_df['director'].map(director_dict)
 
-    # genre_df 생성
-    genre_path = os.path.join(CFG.datapath, 'train', 'genres.tsv')
+    year_dict = {year:i for i, year in enumerate(joined_rating_df['year'].unique())}
+    joined_rating_df['year'] = joined_rating_df['year'].map(year_dict)
 
-    raw_genre_df = pd.read_csv(genre_path)
-    raw_genre_df = raw_genre_df.drop_duplicates(subset=['item'])
-
-    genre_dict = {genre:i for i, genre in enumerate(set(raw_genre_df['genre']))}
-    raw_genre_df['genre'] = raw_genre_df['genre'].map(lambda x: genre_dict[x])
-
-    # writers_df 생성
-    writer_path = os.path.join(CFG.datapath, 'train', 'writers.tsv')
-
-    raw_writer_df = pd.read_csv(writer_path)
-    raw_writer_df = raw_writer_df.drop_duplicates(subset=['item'])
-
-    writer_dict = {writer:i for i, writer in enumerate(set(raw_writer_df['writer']))}
-    raw_writer_df['writer'] = raw_writer_df['writer'].map(lambda x: writer_dict[x])
-
-    # directors_df 생성
-    director_path = os.path.join(CFG.datapath, 'train', 'directors.tsv')
-
-    raw_director_df = pd.read_csv(director_path)
-
-    director_dict = {director:i for i, director in enumerate(set(raw_director_df['director']))}
-    raw_director_df['director'] = raw_director_df['director'].map(lambda x: director_dict[x])
-
-
-    # years_df 
-    year_path = os.path.join(CFG.datapath, 'train', 'years.tsv')
-
-    raw_year_df = pd.read_csv(year_path)
-    
-    year_dict = {year:i for i, year in enumerate(set(raw_year_df['year']))}
-    raw_year_df['year'] = raw_year_df['year'].map(lambda x: year_dict[x])
-
-
-    # titles_df
-    title_path = os.path.join(CFG.datapath, 'train', 'titles.tsv')
-
-    raw_title_df = pd.read_csv(title_path)
-    
-    title_dict = {title:i for i, title in enumerate(set(raw_title_df['title']))}
-    raw_title_df['title'] = raw_title_df['title'].map(lambda x: title_dict[x])
-    
-    # join dfs
-    df_list = [raw_rating_df, raw_director_df, raw_genre_df, raw_title_df, raw_writer_df, raw_year_df]
-    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on=['DATE'],
-                                            how='outer'), df_list).fillna()
+    title_dict = {title:i for i, title in enumerate(joined_rating_df['title'].unique())}
+    joined_rating_df['title'] = joined_rating_df['title'].map(lambda x: title_dict[x])
 
     # user, item을 zero-based index로 mapping
     users = list(set(joined_rating_df.loc[:,'user']))
     users.sort()
     items =  list(set((joined_rating_df.loc[:, 'item'])))
     items.sort()
-    genres =  list(set((joined_rating_df.loc[:, 'genre'])))
-    genres.sort()
 
     if len(users)-1 != max(users):
         users_dict = {users[i]: i for i in range(len(users))}
@@ -124,5 +75,48 @@ def preprocess(CFG):
     return data, field_dims, users, items
 
 
-def data_loader():
-    pass
+# data loader 생성
+class RatingDataset(Dataset):
+    def __init__(self, input_tensor, target_tensor):
+        self.input_tensor = input_tensor.long()
+        self.target_tensor = target_tensor.long()
+
+    def __getitem__(self, index):
+        return self.input_tensor[index], self.target_tensor[index]
+
+    def __len__(self):
+        return self.target_tensor.size(0)
+
+
+# feature matrix X, label tensor y 생성
+def data_loader(args, data, field_dims):
+    user_col = torch.tensor(data.loc[:,'user'])
+    item_col = torch.tensor(data.loc[:,'item'])
+    genre_col = torch.tensor(data.loc[:,'genre'])
+    writer_col = torch.tensor(data.loc[:, 'writer'])
+    director_col = torch.tensor(data.loc[:, 'director'])
+    year_col = torch.tensor(data.loc[:, 'year'])
+    title_col = torch.tensor(data.loc[:, 'title'])
+
+
+    offsets = [0] + np.cumsum(field_dims, axis=0).tolist()
+    for col, offset in zip([user_col, item_col, genre_col], offsets):
+        col += offset
+
+    X = torch.cat([user_col.unsqueeze(1), item_col.unsqueeze(1), genre_col.unsqueeze(1),
+                    writer_col.unsqueeze(1), director_col.unsqueeze(1), year_col.unsqueeze(1), 
+                    title_col.unsqueeze(1)], dim=1)
+    y = torch.tensor(list(data.loc[:,'rating']))
+
+
+    dataset = RatingDataset(X, y)
+    
+    # train, test split
+    train_size = int(args.train_ratio * len(data))
+    test_size = len(data) - train_size
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+
+    train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=512, shuffle=False)
+
+    return train_loader, test_loader
