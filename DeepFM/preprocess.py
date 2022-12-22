@@ -7,10 +7,9 @@ from utils import set_seed
 from args import parse_args
 
 
-def negative_sampling(raw_rating_df, items, num_negative):
+def negative_sampling(raw_rating_df, items, args):
     print('negative sapmling..')
     user_group_dfs = list(raw_rating_df.groupby('user')['item'])
-    first_row = True
     user_neg_dfs = pd.DataFrame()
     temp_dict = {
         'user':[],
@@ -20,7 +19,11 @@ def negative_sampling(raw_rating_df, items, num_negative):
     for u, u_items in tqdm(user_group_dfs):
         u_items = set(u_items)
         n_u_items = len(u_items)
-        num_negative = n_u_items * num_negative
+        
+        if n_u_items >= args.negative_threshold:
+            num_negative = n_u_items * args.ratio_negative_long
+        else:
+            num_negative = n_u_items * args.ratio_negative
         i_user_neg_item = np.random.choice(list(items - u_items), num_negative, replace=False)
 
         temp_dict['user'].extend([u]*len(i_user_neg_item))
@@ -48,7 +51,7 @@ def main():
     print('Creating negative instances...')
 
     items = set(raw_rating_df.loc[:, 'item'])
-    raw_rating_df = negative_sampling(raw_rating_df, items, args.num_negative)
+    raw_rating_df = negative_sampling(raw_rating_df, items, args)
 
     # genre_df 생성
     genre_path = os.path.join(args.datapath, 'genres.tsv')
