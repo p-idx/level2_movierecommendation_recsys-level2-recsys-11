@@ -168,6 +168,8 @@ def main(args):
 
     args.device = torch.device("cuda" if args.cuda else "cpu")
 
+    print(args)
+
     ###############################################################################
     # Load data
     ###############################################################################
@@ -185,7 +187,7 @@ def main(args):
     # Build the model
     ###############################################################################
 
-    p_dims = [200, 600, n_items]
+    p_dims = [500, 2000, n_items]
 
     ###############################################################################
     # Training code
@@ -210,8 +212,8 @@ def main(args):
     for epoch in range(1, args.epochs + 1):
         epoch_start_time = time.time()
         # update_count = 0
-        train(model, train_data_tr, criterion, optimizer)
-        val_loss, n100, r10, r20, r50 = evaluate(model, criterion, train_data_tr, train_data_te)
+        train(model, train_data_tr, criterion, optimizer, is_VAE=is_VAE)
+        val_loss, n100, r10, r20, r50 = evaluate(model, criterion, train_data_tr, train_data_te, is_VAE=is_VAE)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:4.2f}s | valid loss {:4.2f} | '
                 'n100 {:5.3f} | r10 {:5.3f} | r20 {:5.3f} | r50 {:5.3f}'.format(
@@ -235,7 +237,7 @@ def main(args):
         model = torch.load(f)
     
     # Run on test data. (전혀 다른 유저들에 대한)
-    test_loss, n100, r10, r20, r50 = evaluate(model, criterion, test_data_tr, test_data_te, is_VAE=False)
+    test_loss, n100, r10, r20, r50 = evaluate(model, criterion, test_data_tr, test_data_te, is_VAE=is_VAE)
     print('=' * 89)
     print('| End of training | test loss {:4.2f} | n100 {:4.2f} | r10 {:4.2f} | r20 {:4.2f} | '
             'r50 {:4.2f}'.format(test_loss, n100, r10, r20, r50))
@@ -271,8 +273,10 @@ def main(args):
 
     # 모델에 넣어주고, 아웃풋 리턴받기
     raw_numerize_data_tensor = naive_sparse2tensor(raw_numerize_data).to(args.device)
-    recon_batch, mu, logvar = model(raw_numerize_data_tensor)
-
+    if args.model == 'VAE':
+        recon_batch, mu, logvar = model(raw_numerize_data_tensor)
+    else:
+        recon_batch = model(raw_numerize_data_tensor)
     # 각 아이템들에 대한 확률값, 후에 sigmoid 취해주는 듯 (근데 그냥 큰 값이면 확률 높게 예측하니까 큰 순서대로 10개뽑음)
     recon_numpy = recon_batch.cpu().detach().numpy()
     recon_numpy[raw_numerize_data_tensor.cpu().detach().numpy().nonzero()] = -np.inf
@@ -325,6 +329,6 @@ if __name__ == '__main__':
                         help='report interval')
     parser.add_argument('--save', type=str, default='model.pt',
                         help='path to save the final model')
-    args = parser.parse_args([])
+    args = parser.parse_args()
     update_count = 0
     main(args)
