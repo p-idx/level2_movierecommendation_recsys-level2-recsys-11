@@ -6,28 +6,6 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-
-def negative_sampling(raw_rating_df, items, num_negative):
-    user_group_dfs = list(raw_rating_df.groupby('user')['item'])
-    first_row = True
-    user_neg_dfs = pd.DataFrame()
-
-    for u, u_items in tqdm(user_group_dfs):
-        u_items = set(u_items)
-        i_user_neg_item = np.random.choice(list(items - u_items), num_negative, replace=False)
-
-        i_user_neg_df = pd.DataFrame({'user': [u]*num_negative, 'item': i_user_neg_item, 'rating': [0]*num_negative})
-        if first_row == True:
-            user_neg_dfs = i_user_neg_df
-            first_row = False
-        else:
-            user_neg_dfs = pd.concat([user_neg_dfs, i_user_neg_df], axis=0, sort=False)
-    
-    raw_rating_df = pd.concat([raw_rating_df, user_neg_dfs], axis=0, sort=False)
-
-    return raw_rating_df
-
-
 def preprocess(args):
     joined_rating_df = pd.read_csv('../data/train/joined_df')
 
