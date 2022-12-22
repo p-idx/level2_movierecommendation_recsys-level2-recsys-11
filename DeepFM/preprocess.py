@@ -21,9 +21,10 @@ def negative_sampling(raw_rating_df, items, args):
         n_u_items = len(u_items)
         
         if n_u_items >= args.negative_threshold:
-            num_negative = n_u_items * args.ratio_negative_long
+            num_negative = int(n_u_items * args.ratio_negative_long)
         else:
-            num_negative = n_u_items * args.ratio_negative
+            num_negative = int(n_u_items * args.ratio_negative)
+        
         i_user_neg_item = np.random.choice(list(items - u_items), num_negative, replace=False)
 
         temp_dict['user'].extend([u]*len(i_user_neg_item))
@@ -80,7 +81,7 @@ def join_df():
     joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',how='outer'), df_list).fillna(0)
 
     # save joined df
-    joined_rating_df.to_csv('../data/train/joined_df.csv', mode='w')
+    joined_rating_df.to_csv('../data/train/joined_df.csv', mode='w', index=False)
 
     print('joined_rating_df saved at ../data/train/')
 

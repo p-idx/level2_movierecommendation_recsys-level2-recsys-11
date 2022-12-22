@@ -7,9 +7,11 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 def preprocess(args):
-    joined_rating_df = pd.read_csv('../data/train/joined_df')
+    joined_rating_df = pd.read_csv('../data/train/joined_df.csv')
 
     # genre, writer, director, year, title index mapping
+
+    # TODO: 각 dict offset 추가
     genre_dict = {genre:i for i, genre in enumerate(joined_rating_df['genre'].unique())}
     joined_rating_df['genre'] = joined_rating_df['genre'].map(genre_dict)
 
@@ -68,22 +70,13 @@ class RatingDataset(Dataset):
 
 # feature matrix X, label tensor y 생성
 def data_loader(args, data, field_dims):
-    user_col = torch.tensor(data.loc[:,'user'])
-    item_col = torch.tensor(data.loc[:,'item'])
-    genre_col = torch.tensor(data.loc[:,'genre'])
-    writer_col = torch.tensor(data.loc[:, 'writer'])
-    director_col = torch.tensor(data.loc[:, 'director'])
-    year_col = torch.tensor(data.loc[:, 'year'])
-    title_col = torch.tensor(data.loc[:, 'title'])
+    
+    offset = 0
+    for col in tqdm(data.columns):
+        data[col] = data[col] + offset
+        offset += data[col].nunique()
 
-
-    offsets = [0] + np.cumsum(field_dims, axis=0).tolist()
-    for col, offset in zip([user_col, item_col, genre_col], offsets):
-        col += offset
-
-    X = torch.cat([user_col.unsqueeze(1), item_col.unsqueeze(1), 
-                   genre_col.unsqueeze(1), writer_col.unsqueeze(1), director_col.unsqueeze(1), year_col.unsqueeze(1), 
-                    title_col.unsqueeze(1)], dim=1)
+    X = torch.tensor(data.values)
     y = torch.tensor(list(data.loc[:,'rating']))
 
 
