@@ -10,7 +10,7 @@ def parse_args():
     arg('--datapath', default='../data/train', type=str, help='data directory')
     arg('--output_dir', default='./output', type=str)
 
-    arg('--num_negative', default=0.2, type=int, help='number of negative samples')
+    arg('--ratio_negative', default=0.2, type=int, help='number of negative samples')
     arg('--topk', default=10, type=int)
     arg('--train_ratio', default=0.9, type=float)
 
