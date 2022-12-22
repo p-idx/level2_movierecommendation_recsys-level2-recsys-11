@@ -7,14 +7,14 @@ from tqdm import tqdm
 from config import CFG
 
 
-def negative_sampling(raw_rating_df, num_negative):
+def negative_sampling(raw_rating_df, items, num_negative):
     user_group_dfs = list(raw_rating_df.groupby('user')['item'])
     first_row = True
     user_neg_dfs = pd.DataFrame()
 
     for u, u_items in tqdm(user_group_dfs):
         u_items = set(u_items)
-        i_user_neg_item = np.random.choice(list(item - u_items), num_negative, replace=False)
+        i_user_neg_item = np.random.choice(list(items - u_items), num_negative, replace=False)
 
         i_user_neg_df = pd.DataFrame({'user': [u]*num_negative, 'item': i_user_neg_item, 'rating': [0]*num_negative})
         if first_row == True:
@@ -32,20 +32,21 @@ def preprocess(CFG):
     print('Preprocessing...')
 
     # rating_df 생성
-    rating_path = os.path.join(CFG[datapath], 'train', 'train_ratings.csv')
+    rating_path = os.path.join(CFG.datapath, 'train', 'train_ratings.csv')
     raw_rating_df = pd.read_csv(rating_path)
     
     # implicit feedback
     raw_rating_df['rating'] = 1.0
     raw_rating_df.drop(['time'], axis=1, inplace=True)
     print('Creating negative instances...')
-    raw_rating_df = negative_sampling(raw_rating_df, CFG['num_negative'])
 
     users = set(raw_rating_df.loc[:, 'user'])
     items = set(raw_rating_df.loc[:, 'item'])
 
+    raw_rating_df = negative_sampling(raw_rating_df, items, CFG.num_negative)
+
     # genre_df 생성
-    genre_path = os.path.join(CFG[datapath], 'train', 'genres.tsv')
+    genre_path = os.path.join(CFG.datapath, 'train', 'genres.tsv')
 
     raw_genre_df = pd.read_csv(genre_path)
     raw_genre_df = raw_genre_df.drop_duplicates(subset=['item'])
@@ -54,7 +55,7 @@ def preprocess(CFG):
     raw_genre_df['genre'] = raw_genre_df['genre'].map(lambda x: genre_dict[x])
 
     # writers_df 생성
-    writer_path = os.path.join(CFG[datapath], 'train', 'writers.tsv')
+    writer_path = os.path.join(CFG.datapath, 'train', 'writers.tsv')
 
     raw_writer_df = pd.read_csv(writer_path)
     raw_writer_df = raw_writer_df.drop_duplicates(subset=['item'])
@@ -63,7 +64,7 @@ def preprocess(CFG):
     raw_writer_df['writer'] = raw_writer_df['writer'].map(lambda x: writer_dict[x])
 
     # directors_df 생성
-    director_path = os.path.join(CFG[datapath], 'train', 'directors.tsv')
+    director_path = os.path.join(CFG.datapath, 'train', 'directors.tsv')
 
     raw_director_df = pd.read_csv(director_path)
 
@@ -72,7 +73,7 @@ def preprocess(CFG):
 
 
     # years_df 
-    year_path = os.path.join(CFG[datapath], 'train', 'directors.tsv')
+    year_path = os.path.join(CFG.datapath, 'train', 'years.tsv')
 
     raw_year_df = pd.read_csv(year_path)
     
@@ -81,7 +82,7 @@ def preprocess(CFG):
 
 
     # titles_df
-    title_path = os.path.join(CFG[datapath], 'train', 'directors.tsv')
+    title_path = os.path.join(CFG.datapath, 'train', 'titles.tsv')
 
     raw_title_df = pd.read_csv(title_path)
     
