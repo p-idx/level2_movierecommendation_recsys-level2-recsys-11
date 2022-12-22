@@ -20,7 +20,7 @@ from utils import (
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_dir", default="../data/train/", type=str)
+    parser.add_argument("--data_dir", default="/opt/ml/level2_movierecommendation_recsys-level2-recsys-11/data/train/", type=str)
     parser.add_argument("--output_dir", default="output/", type=str)
     parser.add_argument("--data_name", default="Ml", type=str)
 
