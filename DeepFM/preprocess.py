@@ -35,7 +35,7 @@ def negative_sampling(raw_rating_df, items, args):
     return raw_rating_df
 
 
-def main():
+def join_df():
     args = parse_args()
     set_seed(args.seed)
 
@@ -77,13 +77,12 @@ def main():
         
     # join dfs
     df_list = [raw_rating_df, raw_director_df, raw_genre_df, raw_title_df, raw_writer_df, raw_year_df]
-    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',
-                                            how='outer'), df_list).fillna()
+    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',how='outer'), df_list).fillna(0)
 
     # save joined df
-    joined_rating_df.to_csv('../data/train/joined_df', mode='w')
+    joined_rating_df.to_csv('../data/train/joined_df.csv', mode='w')
 
     print('joined_rating_df saved at ../data/train/')
 
 if __name__ == "__main__":
-    main()
+    join_df()
