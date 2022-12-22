@@ -15,7 +15,7 @@ def main():
     check_path(args.output_dir)
 
     # Preprocess
-    data, field_dims, users, items = preprocess(args)
+    data, field_dims, idx_dict = preprocess(args)
 
     # Dataloader
     train_loader, valid_loader = data_loader(args, data, field_dims)

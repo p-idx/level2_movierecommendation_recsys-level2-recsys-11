@@ -8,58 +8,69 @@ from torch.utils.data import DataLoader, Dataset
 
 def preprocess(args):
     joined_rating_df = pd.read_csv('../data/train/joined_df.csv')
+    
+    print('DATA PREPROCESSING...')
+    # user, item을 index로 mapping
+
+    offset = 1 # 0은 NA
+    user2idx = {user:idx for idx, user in enumerate(joined_rating_df['user'].unique(), offset)}
+    idx2user = {idx:user for user, idx in user2idx.items()}
+
+    offset += len(user2idx)
+    item2idx = {item:idx for idx, item in enumerate(joined_rating_df['item'].unique(), offset)}
+    idx2item = {idx:item for item, idx in item2idx.items()}
 
     # genre, writer, director, year, title index mapping
 
-    # TODO: 각 dict offset 추가
-    genre_dict = {genre:i for i, genre in enumerate(joined_rating_df['genre'].unique())}
-    joined_rating_df['genre'] = joined_rating_df['genre'].map(genre_dict)
+    offset += len(item2idx)
+    genre2idx = {genre:i for i, genre in enumerate(joined_rating_df['genre'].unique(), offset)}
+    joined_rating_df['genre'] = joined_rating_df['genre'].map(genre2idx)
 
-    writer_dict = {writer:i for i, writer in enumerate(joined_rating_df['writer'].unique())}
-    joined_rating_df['writer'] = joined_rating_df['writer'].map(writer_dict)
+    offset += len(genre2idx)    
+    writer2idx = {writer:i for i, writer in enumerate(joined_rating_df['writer'].unique(), offset)}
+    joined_rating_df['writer'] = joined_rating_df['writer'].map(writer2idx)
 
-    director_dict = {director:i for i, director in enumerate(joined_rating_df['director'].unique())}
-    joined_rating_df['director'] = joined_rating_df['director'].map(director_dict)
+    offset += len(writer2idx)
+    director2idx = {director:i for i, director in enumerate(joined_rating_df['director'].unique(), offset)}
+    joined_rating_df['director'] = joined_rating_df['director'].map(director2idx)
+    
+    offset += len(director2idx)
+    year2idx = {year:i for i, year in enumerate(joined_rating_df['year'].unique(), offset)}
+    joined_rating_df['year'] = joined_rating_df['year'].map(year2idx)
 
-    year_dict = {year:i for i, year in enumerate(joined_rating_df['year'].unique())}
-    joined_rating_df['year'] = joined_rating_df['year'].map(year_dict)
+    offset += len(year2idx)
+    title2idx = {title:i for i, title in enumerate(joined_rating_df['title'].unique(), offset)}
+    joined_rating_df['title'] = joined_rating_df['title'].map(title2idx)
 
-    title_dict = {title:i for i, title in enumerate(joined_rating_df['title'].unique())}
-    joined_rating_df['title'] = joined_rating_df['title'].map(lambda x: title_dict[x])
-
-    # user, item을 zero-based index로 mapping
-    users = joined_rating_df.loc[:,'user'].unique()
-    users.sort()
-    items =  joined_rating_df.loc[:, 'item'].unique()
-    items.sort()
-
-    if len(users)-1 != max(users):
-        users_dict = {users[i]: i for i in range(len(users))}
-        joined_rating_df['user']  = joined_rating_df['user'].map(lambda x : users_dict[x])
-        users = joined_rating_df.loc[:,'user'].unique()
-        
-    if len(items)-1 != max(items):
-        items_dict = {items[i]: i for i in range(len(items))}
-        joined_rating_df['item']  = joined_rating_df['item'].map(lambda x : items_dict[x])
-        items =  joined_rating_df.loc[:, 'item'].unique()
+    idx_dict = {
+                'user2idx': user2idx,
+                'idx2user': idx2item,
+                'item2idx': item2idx,
+                'idx2item': idx2item,
+                'genre2idx': genre2idx,
+                'writer2idx': writer2idx,
+                'director2idx': director2idx,
+                'year2idx': year2idx,
+                'title2idx': title2idx
+                }
 
     joined_rating_df = joined_rating_df.sort_values(by=['user'])
     joined_rating_df.reset_index(drop=True, inplace=True)
 
     data = joined_rating_df
-    field_dims = np.array(len(users), len(items), len(genre_dict), len(writer_dict), len(director_dict),
-                            len(year_dict), len(title_dict), type=np.uint32)
+    field_dims = np.array([len(user2idx), len(item2idx), len(genre2idx), len(writer2idx), len(director2idx),
+                            len(year2idx), len(title2idx)], dtype=np.uint32)
 
-    print('Preprocess Done!')
+    print('PREPROCESSING DONE!')
     
-    return data, field_dims, users, items
+    return data, field_dims, idx_dict
 
 
 # data loader 생성
 class RatingDataset(Dataset):
     def __init__(self, input_tensor, target_tensor):
-        self.input_tensor = input_tensor.long()
-        self.target_tensor = target_tensor.long()
+        self.input_tensor = input_tensor
+        self.target_tensor = target_tensor
 
     def __getitem__(self, index):
         return self.input_tensor[index], self.target_tensor[index]
@@ -71,14 +82,16 @@ class RatingDataset(Dataset):
 # feature matrix X, label tensor y 생성
 def data_loader(args, data, field_dims):
     
-    offset = 0
-    for col in tqdm(data.columns):
-        data[col] = data[col] + offset
-        offset += data[col].nunique()
+    # offset = 0
+    # for col in tqdm(data.columns):
+    #     data[col] = data[col] + offset
+    #     offset += data[col].nunique()
 
-    X = torch.tensor(data.values)
-    y = torch.tensor(list(data.loc[:,'rating']))
+    data_x = data.drop('rating', axis=1)
+    data_y = data['rating']
 
+    X = torch.LongTensor(data_x.values)
+    y = torch.LongTensor(data_y.values)
 
     dataset = RatingDataset(X, y)
     

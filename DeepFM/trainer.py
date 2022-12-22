@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import tqdm
+from tqdm import tqdm
 import numpy as np
 
 from sklearn.metrics import accuracy_score, roc_auc_score
@@ -39,7 +39,7 @@ def train(args, device, field_dims, train_loader, valid_loader):
     best_epoch, best_auc, best_acc, early_stopping = 0, 0, 0, 0
     print('TRAINING...')
 
-    for e in tqdm(range(args.num_epochs)):
+    for epoch in tqdm(range(args.num_epochs)):
         for fields, target in train_loader:  # train
             fields, target = fields.to(device), target.to(device)
             model.train()
@@ -52,7 +52,7 @@ def train(args, device, field_dims, train_loader, valid_loader):
         AUC, ACC = test(args, device, model, valid_loader)   # validation
         
         if AUC > best_auc:
-            best_epoch, best_auc, best_acc = e, AUC, ACC
+            best_epoch, best_auc, best_acc = epoch, AUC, ACC
             early_stopping = 0
             torch.save(model.state_dict(), args.output_dir)
         
@@ -60,7 +60,7 @@ def train(args, device, field_dims, train_loader, valid_loader):
             early_stopping += 1
             if early_stopping == args.early_stopping:
                 print('##########################')
-                print(f'Early stopping triggered at epoch {e}')
+                print(f'Early stopping triggered at epoch {epoch}')
                 print(f'BEST AUC: {best_auc}, ACC: {best_acc}, BEST EPOCH: {best_epoch}')
                 break
                 
