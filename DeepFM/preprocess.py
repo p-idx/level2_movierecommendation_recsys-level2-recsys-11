@@ -7,9 +7,8 @@ from utils import set_seed
 from args import parse_args
 
 
-def negative_sampling(raw_rating_df, items, num_negative):
+def negative_sampling(raw_rating_df, items, ratio_negative):
     user_group_dfs = list(raw_rating_df.groupby('user')['item'])
-    first_row = True
     user_neg_dfs = pd.DataFrame()
     items=set(items)
     temp_dict = {
@@ -20,7 +19,10 @@ def negative_sampling(raw_rating_df, items, num_negative):
     for u, u_items in tqdm(user_group_dfs):
         u_items = set(u_items)
         n_u_items = len(u_items)
-        num_negative = n_u_items * num_negative
+        if n_u_items < 1000:
+            num_negative = int(n_u_items * ratio_negative)
+        else:
+            num_negative = 200
         i_user_neg_item = np.random.choice(list(items - u_items), num_negative, replace=False)
 
         temp_dict['user'].extend([u]*len(i_user_neg_item))
@@ -32,7 +34,7 @@ def negative_sampling(raw_rating_df, items, num_negative):
     return raw_rating_df
 
 
-def main():
+def join_df():
     args = parse_args()
     set_seed(args.seed)
 
@@ -48,7 +50,7 @@ def main():
     print('Creating negative instances...')
 
     items = set(raw_rating_df.loc[:, 'item'])
-    raw_rating_df = negative_sampling(raw_rating_df, items, args.num_negative)
+    raw_rating_df = negative_sampling(raw_rating_df, items, args.ratio_negative)
 
     # genre_df 생성
     genre_path = os.path.join(args.datapath, 'genres.tsv')
@@ -74,13 +76,12 @@ def main():
         
     # join dfs
     df_list = [raw_rating_df, raw_director_df, raw_genre_df, raw_title_df, raw_writer_df, raw_year_df]
-    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',
-                                            how='outer'), df_list).fillna()
+    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',how='outer'), df_list).fillna(0)
 
     # save joined df
-    joined_rating_df.to_csv('../data/train/joined_df', mode='w')
+    joined_rating_df.to_csv('../data/train/joined_df.csv', mode='w')
 
     print('joined_rating_df saved at ../data/train/')
 
 if __name__ == "__main__":
-    main()
+    join_df()
