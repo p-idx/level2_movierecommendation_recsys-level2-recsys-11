@@ -1,5 +1,6 @@
 import argparse
 import os
+import datetime
 
 import torch
 from torch.utils.data import DataLoader, SequentialSampler
@@ -19,7 +20,7 @@ from utils import (
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_dir", default="../data/train/", type=str)
+    parser.add_argument("--data_dir", default="/opt/ml/level2_movierecommendation_recsys-level2-recsys-11/data/train/", type=str)
     parser.add_argument("--output_dir", default="output/", type=str)
     parser.add_argument("--data_name", default="Ml", type=str)
     parser.add_argument("--do_eval", action="store_true")
@@ -68,7 +69,7 @@ def main():
     parser.add_argument("--gpu_id", type=str, default="0", help="gpu_id")
 
     args = parser.parse_args()
-
+    args.time_info = (datetime.datetime.today() + datetime.timedelta(hours=9)).strftime('%m%d_%H%M')
     set_seed(args.seed)
     check_path(args.output_dir)
 
@@ -112,7 +113,7 @@ def main():
     print(f"Load model from {args.checkpoint_path} for submission!")
     preds = trainer.submission(0)
 
-    generate_submission_file(args.data_file, preds)
+    generate_submission_file(args.data_file, preds, args)
 
 
 if __name__ == "__main__":
