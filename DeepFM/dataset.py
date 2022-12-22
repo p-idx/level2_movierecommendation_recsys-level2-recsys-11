@@ -26,20 +26,20 @@ def preprocess(args):
     joined_rating_df['title'] = joined_rating_df['title'].map(lambda x: title_dict[x])
 
     # user, item을 zero-based index로 mapping
-    users = list(set(joined_rating_df.loc[:,'user']))
+    users = joined_rating_df.loc[:,'user'].unique()
     users.sort()
-    items =  list(set((joined_rating_df.loc[:, 'item'])))
+    items =  joined_rating_df.loc[:, 'item'].unique()
     items.sort()
 
     if len(users)-1 != max(users):
         users_dict = {users[i]: i for i in range(len(users))}
         joined_rating_df['user']  = joined_rating_df['user'].map(lambda x : users_dict[x])
-        users = list(set(joined_rating_df.loc[:,'user']))
+        users = joined_rating_df.loc[:,'user'].unique()
         
     if len(items)-1 != max(items):
         items_dict = {items[i]: i for i in range(len(items))}
         joined_rating_df['item']  = joined_rating_df['item'].map(lambda x : items_dict[x])
-        items =  list(set((joined_rating_df.loc[:, 'item'])))
+        items =  joined_rating_df.loc[:, 'item'].unique()
 
     joined_rating_df = joined_rating_df.sort_values(by=['user'])
     joined_rating_df.reset_index(drop=True, inplace=True)
@@ -81,8 +81,8 @@ def data_loader(args, data, field_dims):
     for col, offset in zip([user_col, item_col, genre_col], offsets):
         col += offset
 
-    X = torch.cat([user_col.unsqueeze(1), item_col.unsqueeze(1), genre_col.unsqueeze(1),
-                    writer_col.unsqueeze(1), director_col.unsqueeze(1), year_col.unsqueeze(1), 
+    X = torch.cat([user_col.unsqueeze(1), item_col.unsqueeze(1), 
+                   genre_col.unsqueeze(1), writer_col.unsqueeze(1), director_col.unsqueeze(1), year_col.unsqueeze(1), 
                     title_col.unsqueeze(1)], dim=1)
     y = torch.tensor(list(data.loc[:,'rating']))
 

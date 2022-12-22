@@ -8,10 +8,10 @@ from args import parse_args
 
 
 def negative_sampling(raw_rating_df, items, num_negative):
+    print('negative sapmling..')
     user_group_dfs = list(raw_rating_df.groupby('user')['item'])
     first_row = True
     user_neg_dfs = pd.DataFrame()
-    items=set(items)
     temp_dict = {
         'user':[],
         'item':[]
