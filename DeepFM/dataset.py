@@ -11,7 +11,7 @@ def preprocess(args):
 
     # genre, writer, director, year, title index mapping
 
-    # TODO: 각 dict offset 추가
+    # TODO: 각 dict별로 offset 추가
     genre_dict = {genre:i for i, genre in enumerate(joined_rating_df['genre'].unique())}
     joined_rating_df['genre'] = joined_rating_df['genre'].map(genre_dict)
 
@@ -47,8 +47,10 @@ def preprocess(args):
     joined_rating_df.reset_index(drop=True, inplace=True)
 
     data = joined_rating_df
-    field_dims = np.array(len(users), len(items), len(genre_dict), len(writer_dict), len(director_dict),
-                            len(year_dict), len(title_dict), type=np.uint32)
+    field_dims = np.array([
+        len(users), len(items), len(genre_dict), len(writer_dict), len(director_dict),
+                            len(year_dict), len(title_dict)
+                            ], dtype=np.int32)
 
     print('Preprocess Done!')
     

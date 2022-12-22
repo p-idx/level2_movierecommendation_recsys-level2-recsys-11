@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import tqdm
+from tqdm import tqdm
 import numpy as np
 
 from sklearn.metrics import accuracy_score, roc_auc_score
@@ -38,8 +38,8 @@ def train(args, device, field_dims, train_loader, valid_loader):
 
     best_epoch, best_auc, best_acc, early_stopping = 0, 0, 0, 0
     print('TRAINING...')
-
-    for e in tqdm(range(args.num_epochs)):
+    
+    for e in tqdm(range(0, args.num_epochs)):
         for fields, target in train_loader:  # train
             fields, target = fields.to(device), target.to(device)
             model.train()
