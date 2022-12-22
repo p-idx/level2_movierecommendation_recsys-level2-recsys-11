@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 
 def preprocess(args):
     joined_rating_df = pd.read_csv('../data/train/joined_df.csv')
-
+    print('df shape',joined_rating_df.shape)
     # genre, writer, director, year, title index mapping
 
     # TODO: 각 dict별로 offset 추가
@@ -78,7 +78,7 @@ def data_loader(args, data, field_dims):
         data[col] = data[col] + offset
         offset += data[col].nunique()
 
-    X = torch.tensor(data.values)
+    X = torch.tensor(data.drop('rating').values)
     y = torch.tensor(list(data.loc[:,'rating']))
 
 
