@@ -3,18 +3,19 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 import numpy as np
+import os
 
 from sklearn.metrics import accuracy_score, roc_auc_score
 from model import DeepFM
 
-def test(args, device, model, valid_loader):
+def test(device, model, valid_loader):
     with torch.no_grad():
         model.eval()
         total_pred = []; total_ans = []
 
         for fields, target in valid_loader:
             fields = fields.to(device)
-            output = model(fields)
+            result = model(fields)
 
             result = result.detach().cpu().tolist()
             target = target.tolist()
@@ -26,7 +27,9 @@ def test(args, device, model, valid_loader):
     total_ans = np.array(total_ans)
 
     auc = roc_auc_score(total_ans, total_pred)
-    acc = accuracy_score(total_ans, total_pred)
+
+    rounded_pred = np.rint(total_pred)
+    acc = accuracy_score(total_ans, rounded_pred)
 
     return auc, acc
 
@@ -49,12 +52,12 @@ def train(args, device, field_dims, train_loader, valid_loader):
             loss.backward()
             optimizer.step()
 
-        AUC, ACC = test(args, device, model, valid_loader)   # validation
-        
+        print(f"EPOCH({epoch})  TRAIN LOSS: {loss:.3f}")
+        AUC, ACC = test(device, model, valid_loader)   # validation
+
         if AUC > best_auc:
             best_epoch, best_auc, best_acc = epoch, AUC, ACC
             early_stopping = 0
-            torch.save(model.state_dict(), args.output_dir)
         
         else:
             early_stopping += 1
@@ -62,6 +65,9 @@ def train(args, device, field_dims, train_loader, valid_loader):
                 print('##########################')
                 print(f'Early stopping triggered at epoch {epoch}')
                 print(f'BEST AUC: {best_auc}, ACC: {best_acc}, BEST EPOCH: {best_epoch}')
+
+                model_dir = os.path.join(args.output_dir, "model.pt")
+                torch.save(model.state_dict(), model_dir)
                 break
                 
     print('TRAINING DONE!')

@@ -19,7 +19,7 @@ class DeepFM(nn.Module):
             if i==0:
                 mlp_layers.append(nn.Linear(self.embedding_dim, dim))
             else:
-                 mlp_layers.append(nn.Linear(mlp_dims[i-1], dim))      #TODO 1 : linear layer를 넣어주세요.
+                 mlp_layers.append(nn.Linear(mlp_dims[i-1], dim)) 
             mlp_layers.append(nn.ReLU(True))                     
             mlp_layers.append(nn.Dropout(drop_rate))
         mlp_layers.append(nn.Linear(mlp_dims[-1], 1)) 
@@ -43,12 +43,12 @@ class DeepFM(nn.Module):
         return mlp_y
 
     def forward(self, x):
-        embed_x = self.embedding(x)
+        # embed_x = self.embedding(x)
         #fm component
         fm_y = self.fm(x).squeeze(1)
         
         #deep component
         mlp_y = self.mlp(x).squeeze(1)
-        
+
         y = torch.sigmoid(fm_y + mlp_y)
         return y

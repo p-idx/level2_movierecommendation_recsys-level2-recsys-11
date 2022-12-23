@@ -6,19 +6,21 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-def preprocess(args):
+def preprocess():
     joined_rating_df = pd.read_csv('../data/train/joined_df.csv')
     
     print('DATA PREPROCESSING...')
     # user, item을 index로 mapping
 
-    offset = 1 # 0은 NA
+    offset = 0 # 0은 NA
     user2idx = {user:idx for idx, user in enumerate(joined_rating_df['user'].unique(), offset)}
     idx2user = {idx:user for user, idx in user2idx.items()}
+    joined_rating_df['user'] = joined_rating_df['user'].map(user2idx)
 
     offset += len(user2idx)
     item2idx = {item:idx for idx, item in enumerate(joined_rating_df['item'].unique(), offset)}
     idx2item = {idx:item for item, idx in item2idx.items()}
+    joined_rating_df['item'] = joined_rating_df['item'].map(item2idx)
 
     # genre, writer, director, year, title index mapping
 
@@ -44,7 +46,7 @@ def preprocess(args):
 
     idx_dict = {
                 'user2idx': user2idx,
-                'idx2user': idx2item,
+                'idx2user': idx2user,
                 'item2idx': item2idx,
                 'idx2item': idx2item,
                 'genre2idx': genre2idx,
@@ -80,7 +82,7 @@ class RatingDataset(Dataset):
 
 
 # feature matrix X, label tensor y 생성
-def data_loader(args, data, field_dims):
+def data_loader(args, data):
     
     # offset = 0
     # for col in tqdm(data.columns):

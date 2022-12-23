@@ -77,7 +77,7 @@ def join_df():
     raw_title_df = pd.read_csv(title_path, sep='\t')
         
     # join dfs
-    df_list = [raw_rating_df, raw_director_df, raw_genre_df, raw_title_df, raw_writer_df, raw_year_df]
+    df_list = [raw_rating_df, raw_genre_df, raw_writer_df, raw_director_df, raw_year_df, raw_title_df]
     joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',how='outer'), df_list).fillna(-1)
 
     # save joined df
