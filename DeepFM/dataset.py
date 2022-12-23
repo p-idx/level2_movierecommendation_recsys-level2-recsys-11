@@ -94,7 +94,6 @@ def data_loader(args, data):
 
     X = torch.LongTensor(data_x.values)
     y = torch.LongTensor(data_y.values)
-
     dataset = RatingDataset(X, y)
     
     # train, test split

@@ -52,12 +52,14 @@ def train(args, device, field_dims, train_loader, valid_loader):
             loss.backward()
             optimizer.step()
 
-        print(f"EPOCH({epoch})  TRAIN LOSS: {loss:.3f}")
         AUC, ACC = test(device, model, valid_loader)   # validation
+
+        print(f"EPOCH({epoch})  TRAIN LOSS: {loss:.3f}  VALID AUC: {AUC:.3f}    VALID ACC: {ACC:.3f}")
 
         if AUC > best_auc:
             best_epoch, best_auc, best_acc = epoch, AUC, ACC
             early_stopping = 0
+            torch.save(model.state_dict(), model_dir)
         
         else:
             early_stopping += 1
@@ -67,7 +69,6 @@ def train(args, device, field_dims, train_loader, valid_loader):
                 print(f'BEST AUC: {best_auc}, ACC: {best_acc}, BEST EPOCH: {best_epoch}')
 
                 model_dir = os.path.join(args.output_dir, "model.pt")
-                torch.save(model.state_dict(), model_dir)
                 break
                 
     print('TRAINING DONE!')
