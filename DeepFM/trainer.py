@@ -39,6 +39,8 @@ def train(args, device, field_dims, train_loader, valid_loader):
     bce_loss = nn.BCELoss() # Binary Cross Entropy loss
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    model_dir = os.path.join(args.output_dir, "model.pt")
+
     best_epoch, best_auc, best_acc, early_stopping = 0, 0, 0, 0
     print('TRAINING...')
 
@@ -68,7 +70,6 @@ def train(args, device, field_dims, train_loader, valid_loader):
                 print(f'Early stopping triggered at epoch {epoch}')
                 print(f'BEST AUC: {best_auc}, ACC: {best_acc}, BEST EPOCH: {best_epoch}')
 
-                model_dir = os.path.join(args.output_dir, "model.pt")
                 break
                 
     print('TRAINING DONE!')
