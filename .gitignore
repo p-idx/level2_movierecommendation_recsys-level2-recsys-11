@@ -205,6 +205,14 @@ poetry.toml
 */output/*
 *.sh
 *.ipynb
-data/
+data/eval/
+data/train/
 *.pt
 *.output
+
+#Recbole
+RecBole/log/
+RecBole/log_tensorboard/
+RecBole/output/
+RecBole/saved/
+RecBole/dataset/
