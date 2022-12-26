@@ -216,3 +216,6 @@ RecBole/log_tensorboard/
 RecBole/output/
 RecBole/saved/
 RecBole/dataset/
+*.out
+RecBole/*.yaml
+RecBole/inference.py
