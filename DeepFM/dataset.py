@@ -157,16 +157,17 @@ def mapping(
     raw_title_df = pd.read_csv(raw_title_data, sep='\t')
 
     print('merge start')
-    joined_inference_df = pd.merge(inference_rating_df, raw_genre_df, left_on='item', right_on='item', how='inner')
+    joined_inference_df = pd.merge(inference_rating_df, raw_genre_df, left_on='item', right_on='item', how='outer')
     del inference_rating_df, raw_genre_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_writer_df, left_on='item', right_on='item', how='inner')
+    joined_inference_df = pd.merge(joined_inference_df, raw_writer_df, left_on='item', right_on='item', how='outer')
     del raw_writer_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_year_df, left_on='item', right_on='item', how='inner')
+    joined_inference_df = pd.merge(joined_inference_df, raw_year_df, left_on='item', right_on='item', how='outer')
     del raw_year_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_director_df, left_on='item', right_on='item', how='inner')
+    joined_inference_df = pd.merge(joined_inference_df, raw_director_df, left_on='item', right_on='item', how='outer')
     del raw_director_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_title_df, left_on='item', right_on='item', how='inner')
+    joined_inference_df = pd.merge(joined_inference_df, raw_title_df, left_on='item', right_on='item', how='outer')
     del raw_title_df
+    joined_inference_df = joined_inference_df.fillna(0)
     print('merge done')
 
 
@@ -177,7 +178,9 @@ def mapping(
     joined_inference_df['director'] = joined_inference_df['director'].map(idx_dict['director2idx'])
     joined_inference_df['year'] = joined_inference_df['year'].map(idx_dict['year2idx'])
     joined_inference_df['title'] = joined_inference_df['title'].map(idx_dict['title2idx'])
-    
+    joined_inference_df = joined_inference_df.fillna(0)
+    joined_inference_df = joined_inference_df.drop_duplicates(['user', 'item'])
 
     return torch.tensor(joined_inference_df.values).to('cuda').long()
+    # return torch.tensor(joined_inference_df.values).long() # for debugging
     

@@ -10,6 +10,7 @@ class DeepFM(nn.Module):
         # Fm component의 constant bias term과 1차 bias term
         self.bias = nn.Parameter(torch.zeros((1,)))
         self.fc = nn.Embedding(total_input_dim, 1)
+
         
         self.embedding = nn.Embedding(total_input_dim, embedding_dim) 
         self.embedding_dim = len(input_dims) * embedding_dim
@@ -50,5 +51,6 @@ class DeepFM(nn.Module):
         #deep component
         mlp_y = self.mlp(x).squeeze(1)
 
-        y = torch.sigmoid(fm_y + mlp_y)
+        # y = torch.sigmoid(fm_y + mlp_y) # for train
+        y = fm_y + mlp_y # for inference
         return y

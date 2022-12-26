@@ -25,10 +25,7 @@ def main():
     # Preprocess
     joined_rating_df = pd.read_csv(os.path.join(args.data_path, 'joined_df.csv'))
     data, field_dims, idx_dict = preprocess(joined_rating_df)
-    print(joined_rating_df)
-    print('-------------------------------------------')
-    print(data)
-    # raise RuntimeError
+
     # Dataloader
     train_loader, valid_loader = data_loader(args, data)
 
@@ -37,6 +34,7 @@ def main():
     if 'model.pt' in os.listdir('./output'):
         model_path = os.path.join(args.output_dir, "model.pt")
         model = DeepFM(field_dims, args.embedding_dim, args.mlp_dims).to(device)
+        # model = DeepFM(field_dims, args.embedding_dim, args.mlp_dims) # for debugging
         model.load_state_dict(torch.load(model_path))
         
     else:
@@ -47,23 +45,21 @@ def main():
     LAST_USER_ID = 31359
     slice_num = 2_300
     user_list = [i * slice_num for i in range(1, LAST_USER_ID//slice_num)]
-    
-    user_list.append(LAST_USER_ID)
     print(user_list)
+    user_list.append(LAST_USER_ID)
     slice_start = 0
     predict_output = dict()
-    for slice_end in user_list: # user 잘라서 넣어야 함
+    for slice_end in user_list[:1]: # user 잘라서 넣어야 함
         
         temp_list = [i for i in range(slice_start, slice_end)]
         sliced_df = joined_rating_df.query('user in @temp_list')
         inference_rating_df = make_inference_data(sliced_df, args)
         inference_data = mapping(inference_rating_df, idx_dict, args)
-        print('shape: ',inference_data.shape)
         predict_data = model(inference_data)
         
         slice_start = slice_end
-        print(f'{(user_list.index(slice_end)+1) / (len(user_list)-1):.1f}% done')
+        print(f'{(user_list.index(slice_end)+1) / (len(user_list)-1):.2f}% done')
 
-
+    print(predict_data.shape)
 if __name__ == "__main__":
     main()
