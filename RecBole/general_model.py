@@ -56,7 +56,12 @@ def set_config(args, config):
         config['embedding_size'] = eval('args.' + str(args.model) + '_embedding_size')
         config['alpha'] = eval('args.' + str(args.model) + '_alpha')
         config['reg_weights'] = eval('args.' + str(args.model) + '_reg_weights')
-
+    elif args.model == 'MultiVAE':
+        config["mlp_hidden_size"] = eval('args.' + str(args.model) + '_mlp_hidden_size')
+        config["latent_dimension"] = eval('args.' + str(args.model) + '_latent_dimension')
+        config["dropout_prob"] = eval('args.' + str(args.model) + '_dropout_prob')
+        config["anneal_cap"] = eval('args.' + str(args.model) + '_anneal_cap')
+        config["total_anneal_steps"] = eval('args.' + str(args.model) + '_total_anneal_steps')
 
 def main(args):
     print(torch.cuda.is_available())
@@ -93,7 +98,11 @@ if __name__ == '__main__':
     parser.add_argument('--ItemKNN_k', type=int, default='100')
     parser.add_argument('--ItemKNN_shrink', type=float, default='0.0')
 
-
+    parser.add_argument('--MultiVAE_latent_dimension', type=int, default='128')
+    parser.add_argument('--MultiVAE_mlp_hidden_size', type=list, default=[600])
+    parser.add_argument('--MultiVAE_dropout_prob', type=float, default='0.5')
+    parser.add_argument('--MultiVAE_anneal_cap', type=float, default='0.2')
+    parser.add_argument('--MultiVAE_total_anneal_steps', type=int, default='200000')
 
 
     args = parser.parse_args()
