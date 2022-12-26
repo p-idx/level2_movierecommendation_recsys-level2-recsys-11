@@ -14,7 +14,10 @@ userid, itemid = train_df['user'].unique(), train_df['item'].unique()
 index_2_userid = {i:v for i,v in enumerate(userid)}
 index_2_itemid = {i:v for i,v in enumerate(itemid)}
 
+# data_path = '/opt/ml/input/level2_movierecommendation_recsys-level2-recsys-11/RecBole/saved/EASE-Dec-24-2022_16-14-55.pth' # 그냥 특정 파일을 하고 싶을 때는 이걸 사용하세요
 data_path = sorted(Path('./saved').iterdir(), key=os.path.getmtime)[-1].name
+file_name = 'output/' + data_path[:-3] + 'csv'
+
 print(f'load data and model from || {data_path}')
 config, model, dataset, train_data, valid_data, test_data = load_data_and_model('saved/' + data_path)
 
@@ -41,6 +44,5 @@ dataframe = pd.DataFrame(answer, columns=["user", "item"])
 
 if not os.path.exists('./output'):
     os.mkdir('./output')
-file_name = 'output/' + data_path[:-3] + 'csv'
 print(f'file name is {file_name}')
 dataframe.to_csv(file_name, index=False)

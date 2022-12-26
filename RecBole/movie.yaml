@@ -6,6 +6,7 @@ state: 'DEBUG' #str, 로그 출력 수준. ['INFO', 'DEBUG', 'WARNING', 'ERROR',
 reproducibility: True #bool. 잘 몰?루 재생산 가능하게 하는 방법과, 더 빠르지만 안 되게 하는 방법
 # data_path: 'movie'
 checkpoint_dir: 'saved/'
+show_progress : False #tqdm으로 진행사항 볼 것인지
 log_wandb: False
 shuffle: True # 에폭 돌기 전에 학습데이터 섞을지
 
@@ -44,7 +45,7 @@ train_neg_sample_args : # 오답 샘플링
     candidate_num : 0 #
 
 # eval_step : 1 # 학습 중 언제부터 검증셋을 쓸지
-stopping_step : 10 # 얼리스타핑 patience
+stopping_step : 3 # 얼리스타핑 patience
 # # clip_grad_norm : None
 # loss_decimal_place : 4 # The decimal place of training loss
 # weight_decay : 0.0 # weight decay (L2 penalty), used for optimizer.
@@ -54,18 +55,19 @@ eval_args :
     group_by : user # 무얼 기준으로 나눌지. none으로 두면 group하지 않는다.
     order : 'RO' # inter에서 데이터 정렬할지. RO는 랜덤하게, TO는 시간 순으로
     split :
-        RS : [9.9, 0.1, 0] # train,valid,test 나누는 비율. LS나 RS 하나만 써라.
+        RS : [0.999, 0.001, 0] # train,valid,test 나누는 비율. LS나 RS 하나만 써라.
         #LS : 'test_only' #LS로 하면 ['valid_and_test', 'valid_only', 'test_only']
     mode : 'full' # ['full','unixxx','popxxx','labeled'] 모델로 평가할 데이터 범위를 정한다.
                     # labeled 빼면 전부 암묵적 피드백에 대한 것. xxx에 숫자를 넣는다. 오답을 몇개 둘지!
-repeatable : False #본거 에 대해서 추천을 해줄지. 시퀀스에 대해서는 작동하지 않는다.
+repeatable : False #본거에 대해서 추천을 해줄지. 시퀀스에 대해서는 작동하지 않는다.
 metrics : ['Recall', 'MRR', 'NDCG', 'Hit']
         # 랭킹 지표 Recall, MRR, NDCG, Hit, MAP, Precision, GAUC, ItemCoverage, AveragePopularity, GiniIndex, ShannonEntropy, TailPercentage
         # 평점 지표 AUC, MAE, RMSE, LogLoss
 topk : 10 #평가 시에 몇 개 추천할지
-valid_metric : 'MRR@10' # 얼리스타핑에 사용할 지표
+valid_metric : 'Recall@10' # 얼리스타핑에 사용할 지표. 우리의 정답지에 애초에 순위가 안 나와있다. 순위를 고려한 지표를 걸수는 없다.
 eval_batch_size: 4096 #평가 시의 배치 사이즈
 
 
 
 embedding_size: 128
+reg_weight : 750

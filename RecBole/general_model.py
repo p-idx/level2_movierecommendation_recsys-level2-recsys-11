@@ -44,89 +44,57 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 
 import torch
 
+def set_config(args, config):
+    config['gpu_id'] = 'cuda:0'
+    config['split_to'] = 2
+    init_seed(config['seed'], config['reproducibility'])
+    config['learning_rate'] = args.lr
+
+    if args.model == 'EASE':
+        config['reg_weight'] = eval('args.' + str(args.model) + '_reg_weight')
+    elif args.model == 'FISM':
+        config['embedding_size'] = eval('args.' + str(args.model) + '_embedding_size')
+        config['alpha'] = eval('args.' + str(args.model) + '_alpha')
+        config['reg_weights'] = eval('args.' + str(args.model) + '_reg_weights')
+
+
 def main(args):
     print(torch.cuda.is_available())
 
-    model_name = args.model
-    # config = Config(model='FISM', dataset="movie", config_file_list=['/opt/ml/input/mission/Recbole/movie.yaml'])
-    config = Config(model=model_name, dataset="movie", config_file_list=['movie.yaml'])
-    config['gpu_id'] = 'cuda:0'
-    config['split_to'] = 20
-    init_seed(config['seed'], config['reproducibility'])
+    config = Config(model=args.model, dataset="movie", config_file_list=['movie.yaml'])
+    set_config(args, config)
 
     print(config)
 
     dataset = create_dataset(config)
     train_data, valid_data, test_data = data_preparation(config, dataset)
-    if args.model == 'FISM':
-        model = FISM(config, train_data.dataset).to(config['device'])
-    elif args.model == 'EASE':
-        model = EASE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'BPR':
-        model = BPR(config, train_data.dataset).to(config['device'])
-    elif args.model == 'ItemKNN':
-        model = ItemKNN(config, train_data.dataset).to(config['device'])
-    elif args.model == 'NeuMF':
-        model = NeuMF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'ConvNCF':
-        model = ConvNCF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'ConvNCFBPR':
-        model = ConvNCFBPRLoss(config, train_data.dataset).to(config['device'])
-    elif args.model == 'DMF':
-        model = DMF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'NAIS':
-        model = NAIS(config, train_data.dataset).to(config['device'])
-    elif args.model == 'SpectralCF':
-        model = SpectralCF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'GCMC':
-        model = GCMC(config, train_data.dataset).to(config['device'])
-    elif args.model == 'NGCF':
-        model = NGCF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'LightGCN':
-        model = LightGCN(config, train_data.dataset).to(config['device'])
-    elif args.model == 'DGCF':
-        model = DGCF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'LINE':
-        model = LINE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'MultiVAE':
-        model = MultiVAE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'MultiDAE':
-        model = MultiDAE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'MacridVAE':
-        model = MacridVAE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'CDAE':
-        model = CDAE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'ENMF':
-        model = ENMF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'NNCF':
-        model = NNCF(config, train_data.dataset).to(config['device'])
-    elif args.model == 'RaCT':
-        model = RaCT(config, train_data.dataset).to(config['device'])
-    elif args.model == 'RecVAE':
-        model = RecVAE(config, train_data.dataset).to(config['device'])
-    elif args.model == 'SLIMElasti':
-        model = SLIMElastic(config, train_data.dataset).to(config['device'])
-    elif args.model == 'SGL':
-        model = SGL(config, train_data.dataset).to(config['device'])
-    elif args.model == 'ADMMSLIM':
-        model = ADMMSLIM(config, train_data.dataset).to(config['device'])
-    elif args.model == 'NCEPLRec':
-        model = NCEPLRec(config, train_data.dataset).to(config['device'])
-    elif args.model == 'SimpleX':
-        model = SimpleX(config, train_data.dataset).to(config['device'])
-    elif args.model == 'NCL':
-        model = NCL(config, train_data.dataset).to(config['device'])
+    model = eval(args.model)(config, train_data.dataset).to(config['device'])
 
     trainer = get_trainer(config['MODEL_TYPE'], config['model'])(config, model)
 
     best_valid_score, best_valid_result = trainer.fit(
         train_data, valid_data, saved=True, verbose=True, show_progress=config['show_progress']
     )
-    print(best_valid_result)
     print(best_valid_score)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, default='EASE')
+    parser.add_argument('--lr', type=float, default=1e-3)
+
+    #EASE
+    parser.add_argument('--EASE_reg_weight', type=float, default='250.0')
+
+    #FISM
+    parser.add_argument('--FISM_embedding_size', type=int, default='64')
+    parser.add_argument('--FISM_alpha', type=float, default='0.0')
+    parser.add_argument('--FISM_reg_weights', type=float, nargs='+', default=[1e-2, 1e-2])
+
+    parser.add_argument('--ItemKNN_k', type=int, default='100')
+    parser.add_argument('--ItemKNN_shrink', type=float, default='0.0')
+
+
+
+
     args = parser.parse_args()
     main(args)
