@@ -15,7 +15,6 @@ def negative_sampling(raw_rating_df, items, args):
         'user':[],
         'item':[]
     }
-
     for u, u_items in tqdm(user_group_dfs):
         u_items = set(u_items)
         n_u_items = len(u_items)

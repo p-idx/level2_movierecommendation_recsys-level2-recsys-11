@@ -6,8 +6,8 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-def preprocess():
-    joined_rating_df = pd.read_csv('../data/train/joined_df.csv')
+def preprocess(joined_rating_df):
+    joined_rating_df = joined_rating_df.copy()
     
     print('DATA PREPROCESSING...')
     # user, item을 index로 mapping
@@ -105,3 +105,79 @@ def data_loader(args, data):
     test_loader = DataLoader(test_dataset, batch_size=512, shuffle=False)
 
     return train_loader, test_loader
+
+
+def make_inference_data(
+    joined_rating_df:pd.DataFrame,
+    args
+    ) -> pd.DataFrame:
+    # 3. infrence instance 생성
+
+    user_group_dfs = list(joined_rating_df.groupby('user')['item'])
+    items=set(joined_rating_df['item'].unique())
+    df_dict= {
+            'user':[],
+            'item':[]
+            }
+    for u, u_items in tqdm(user_group_dfs):
+        u_items = set(u_items)
+        i_user_neg_item = list(items - u_items)
+        
+        df_dict['user'].extend([u]*len(i_user_neg_item))
+        df_dict['item'].extend(i_user_neg_item)
+    # inference_file = 'inference_raw_df.csv'
+    # inference_file_path = os.path.join(args.data_path, inference_file)
+    # if inference_file in os.listdir(args.data_path):
+    #     print('you have inference file')
+    #     inference_rating_df = pd.read_csv(inference_file_path)
+    # else:
+    #     print("you don't have inference file")
+    #     inference_rating_df = pd.DataFrame(df_dict)
+    #     inference_rating_df.to_csv(inference_file_path, index=False)
+    inference_rating_df = pd.DataFrame(df_dict)
+
+    return inference_rating_df
+
+def mapping(
+    inference_rating_df:pd.DataFrame, 
+    idx_dict:dict,
+    args
+    ) -> torch.Tensor:
+
+    raw_genre_data = os.path.join(args.data_path, "genres.tsv")
+    raw_writer_data = os.path.join(args.data_path, "writers.tsv")
+    raw_director_data = os.path.join(args.data_path, "directors.tsv")
+    raw_year_data = os.path.join(args.data_path, "years.tsv")
+    raw_title_data = os.path.join(args.data_path, "titles.tsv")
+
+    raw_genre_df = pd.read_csv(raw_genre_data, sep='\t')
+    raw_writer_df = pd.read_csv(raw_writer_data, sep='\t')
+    raw_director_df = pd.read_csv(raw_director_data, sep='\t')
+    raw_year_df = pd.read_csv(raw_year_data, sep='\t')
+    raw_title_df = pd.read_csv(raw_title_data, sep='\t')
+
+    print('merge start')
+    joined_inference_df = pd.merge(inference_rating_df, raw_genre_df, left_on='item', right_on='item', how='inner')
+    del inference_rating_df, raw_genre_df
+    joined_inference_df = pd.merge(joined_inference_df, raw_writer_df, left_on='item', right_on='item', how='inner')
+    del raw_writer_df
+    joined_inference_df = pd.merge(joined_inference_df, raw_year_df, left_on='item', right_on='item', how='inner')
+    del raw_year_df
+    joined_inference_df = pd.merge(joined_inference_df, raw_director_df, left_on='item', right_on='item', how='inner')
+    del raw_director_df
+    joined_inference_df = pd.merge(joined_inference_df, raw_title_df, left_on='item', right_on='item', how='inner')
+    del raw_title_df
+    print('merge done')
+
+
+    joined_inference_df['user'] = joined_inference_df['user'].map(idx_dict['user2idx'])
+    joined_inference_df['item'] = joined_inference_df['item'].map(idx_dict['item2idx'])
+    joined_inference_df['genre'] = joined_inference_df['genre'].map(idx_dict['genre2idx'])
+    joined_inference_df['writer'] = joined_inference_df['writer'].map(idx_dict['writer2idx'])
+    joined_inference_df['director'] = joined_inference_df['director'].map(idx_dict['director2idx'])
+    joined_inference_df['year'] = joined_inference_df['year'].map(idx_dict['year2idx'])
+    joined_inference_df['title'] = joined_inference_df['title'].map(idx_dict['title2idx'])
+    
+
+    return torch.tensor(joined_inference_df.values).to('cuda').long()
+    

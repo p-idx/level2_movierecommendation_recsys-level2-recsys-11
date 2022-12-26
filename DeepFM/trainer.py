@@ -73,3 +73,5 @@ def train(args, device, field_dims, train_loader, valid_loader):
                 break
                 
     print('TRAINING DONE!')
+
+    return model
