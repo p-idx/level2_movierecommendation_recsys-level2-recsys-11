@@ -6,6 +6,7 @@ from tqdm import tqdm
 import argparse
 import datetime
 import ast
+import logging
 
 from recbole.model.general_recommender.fism         import FISM
 from recbole.model.general_recommender.ease         import EASE
@@ -55,11 +56,16 @@ def set_config(args, config):
     config['log_wandb'] = True
 
     if args.model == 'EASE':
-        config['reg_weight'] = eval('args.' + str(args.model) + '_reg_weight')
-    elif args.model == 'FISM':
-        config['embedding_size'] = eval('args.' + str(args.model) + '_embedding_size')
-        config['alpha'] = eval('args.' + str(args.model) + '_alpha')
-        config['reg_weights'] = eval('args.' + str(args.model) + '_reg_weights')
+        config['reg_weight'] = args.reg_weight
+    elif args.model == 'FISM': #끝
+        config['embedding_size'] = args.embedding_size
+        config['alpha'] = args.alpha
+        config['reg_weights'] = args.reg_weights
+    elif args.model == 'BPR':
+        config['embedding_size'] = args.embedding_size
+    elif args.model == 'ItemKNN':
+        config['k'] = args.k
+        config['shrink'] = args.shrink
 
 
 def main(args):
@@ -76,7 +82,7 @@ def main(args):
         name=f'{args.model}_{cur}',
         config=args,
     )
-    print(config)
+    logging.info(config)
 
     dataset = create_dataset(config)
     train_data, valid_data, test_data = data_preparation(config, dataset)
@@ -104,13 +110,14 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1e-3)
 
     #EASE
-    parser.add_argument('--EASE_reg_weight', type=float, default='250.0')
+    parser.add_argument('--reg_weight', type=float, default='250.0')
 
     #FISM
-    parser.add_argument('--FISM_embedding_size', type=int, default='64')
-    parser.add_argument('--FISM_alpha', type=float, default='0.0')
-    parser.add_argument('--FISM_reg_weights', type=arg_as_lst, default=[1e-2, 1e-2])
-
+    parser.add_argument('--embedding_size', type=int, default='64')
+    parser.add_argument('--alpha', type=float, default='0.0')
+    parser.add_argument('--reg_weights', type=arg_as_lst, default=[1e-2, 1e-2])
+    parser.add_argument('--k', type=int, default='100')
+    parser.add_argument('--shrink', type=float, default='0.0')
 
 
     args = parser.parse_args()
