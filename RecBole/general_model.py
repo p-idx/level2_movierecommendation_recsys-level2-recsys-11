@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import argparse
+import datetime
+import ast
 
 from recbole.model.general_recommender.fism         import FISM
 from recbole.model.general_recommender.ease         import EASE
@@ -43,12 +45,14 @@ from recbole.utils import init_logger, get_trainer, init_seed#, set_color
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 import torch
+import wandb
 
 def set_config(args, config):
     config['gpu_id'] = 'cuda:0'
     config['split_to'] = 2
     init_seed(config['seed'], config['reproducibility'])
     config['learning_rate'] = args.lr
+    config['log_wandb'] = True
 
     if args.model == 'EASE':
         config['reg_weight'] = eval('args.' + str(args.model) + '_reg_weight')
@@ -61,9 +65,17 @@ def set_config(args, config):
 def main(args):
     print(torch.cuda.is_available())
 
+    cur = datetime.datetime.now()
+    cur = cur.strftime("%b-%d-%Y_%H-%M-%S")
+
     config = Config(model=args.model, dataset="movie", config_file_list=['movie.yaml'])
     set_config(args, config)
-
+    init_logger(config)
+    wandb.init(
+        project=f'kdg_{args.model}',
+        name=f'{args.model}_{cur}',
+        config=args,
+    )
     print(config)
 
     dataset = create_dataset(config)
@@ -76,8 +88,17 @@ def main(args):
         train_data, valid_data, saved=True, verbose=True, show_progress=config['show_progress']
     )
     print(best_valid_score)
+    wandb.log(best_valid_result)
+    wandb.finish()
 
 if __name__ == '__main__':
+
+    def arg_as_lst(s):
+        v = ast.literal_eval(s)
+        if not isinstance(v, list):
+            raise argparse.ArgumentTypeError("not a list")
+        return v
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, default='EASE')
     parser.add_argument('--lr', type=float, default=1e-3)
@@ -88,11 +109,7 @@ if __name__ == '__main__':
     #FISM
     parser.add_argument('--FISM_embedding_size', type=int, default='64')
     parser.add_argument('--FISM_alpha', type=float, default='0.0')
-    parser.add_argument('--FISM_reg_weights', type=float, nargs='+', default=[1e-2, 1e-2])
-
-    parser.add_argument('--ItemKNN_k', type=int, default='100')
-    parser.add_argument('--ItemKNN_shrink', type=float, default='0.0')
-
+    parser.add_argument('--FISM_reg_weights', type=arg_as_lst, default=[1e-2, 1e-2])
 
 
 

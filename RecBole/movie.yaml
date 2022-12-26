@@ -2,11 +2,11 @@
 gpu_id: 'cuda:0' #str. 사용가능한 gpuid 이거 어차피 잘 안됨. 그냥 직접 to(device)하는게 현명
 worker: 8 #int. numworker
 seed: 42 #int, 시드
-state: 'DEBUG' #str, 로그 출력 수준. ['INFO', 'DEBUG', 'WARNING', 'ERROR', 'CRITICAL']
+state: 'INFO' #str, 로그 출력 수준. ['INFO', 'DEBUG', 'WARNING', 'ERROR', 'CRITICAL']
 reproducibility: True #bool. 잘 몰?루 재생산 가능하게 하는 방법과, 더 빠르지만 안 되게 하는 방법
 # data_path: 'movie'
 checkpoint_dir: 'saved/'
-show_progress : False #tqdm으로 진행사항 볼 것인지
+show_progress : True #tqdm으로 진행사항 볼 것인지
 log_wandb: False
 shuffle: True # 에폭 돌기 전에 학습데이터 섞을지
 
