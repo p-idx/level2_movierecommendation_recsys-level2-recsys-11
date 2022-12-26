@@ -474,7 +474,6 @@ class Trainer(AbstractTrainer):
                     max_step=self.stopping_step,
                     bigger=self.valid_metric_bigger,
                 )
-                print(epoch_idx, valid_result)
                 valid_end_time = time()
                 valid_score_output = (
                     set_color("epoch %d evaluating", "green")
