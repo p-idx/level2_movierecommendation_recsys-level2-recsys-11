@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import re
 from tqdm import tqdm
 
 train_df = pd.read_csv('/opt/ml/input/data/train/train_ratings.csv')
@@ -50,15 +51,15 @@ year_merge.loc[year_merge.year.isna(),'year'] = year_na['title'].apply(lambda x 
 year_merge.index = year_merge.item
 year_merge.drop(['item','user','time'], axis=1, inplace=True)
 year_merge['title'] = year_merge['title'].apply(lambda x : x[:-7])
-
+year_merge['title'] = year_merge['title'].apply(lambda x : re.sub(r"[^0-9a-zA-Z\s]", "", x))
 genre_agg = genre_data.groupby('item').agg(list)
 
 table = []
 for i in itemid_2_index.values():
     item_id = index_2_itemid[i]
-    table.append([i, year_merge.loc[item_id,'year'], year_merge.loc[item_id,'title'], " ".join(genre_agg.loc[item_id][0])])
+    table.append([i, year_merge.loc[item_id,'title'], year_merge.loc[item_id,'year'], " ".join(genre_agg.loc[item_id][0])]) #  
 
 with open(itemfile, "w") as f:
-    f.write("item:token\tyear:token\ttitle:token_seq\tgenre:token_seq\n")
+    f.write("item:token\tyear:token\ttitle:token_seq\tgenre:token_seq\n") # 
     for row in table:
         f.write("\t".join([str(x) for x in row])+"\n")
