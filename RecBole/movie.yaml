@@ -27,7 +27,7 @@ TIME_FIELD: 'timestamp'
 load_col: # 사용할 피쳐.
     inter: ['user', 'item', 'rating'] # inter에 있는 피쳐니까 이렇게 표시
     user: ['user']
-    item: ['item', 'year', 'title', 'genre']
+    item: ['item', 'year', 'title', 'genre', 'inter_year']
 val_interval:
     rating: "[0,1]"
 user_inter_num_interval: "[0,inf)"
