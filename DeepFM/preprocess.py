@@ -42,7 +42,7 @@ def join_df():
     print('Preprocessing...')
 
     # rating_df 생성
-    rating_path = os.path.join(args.datapath, 'train_ratings.csv')
+    rating_path = os.path.join(args.data_path, 'train_ratings.csv')
     raw_rating_df = pd.read_csv(rating_path)
     
     # implicit feedback
@@ -54,30 +54,31 @@ def join_df():
     raw_rating_df = negative_sampling(raw_rating_df, items, args)
 
     # genre_df 생성
-    genre_path = os.path.join(args.datapath, 'genres.tsv')
+    genre_path = os.path.join(args.data_path, 'genres.tsv')
     raw_genre_df = pd.read_csv(genre_path, sep='\t')
     raw_genre_df = raw_genre_df.drop_duplicates(subset=['item'])
 
     # writers_df 생성
-    writer_path = os.path.join(args.datapath, 'writers.tsv')
+    writer_path = os.path.join(args.data_path, 'writers.tsv')
     raw_writer_df = pd.read_csv(writer_path, sep='\t')
     raw_writer_df = raw_writer_df.drop_duplicates(subset=['item'])
 
     # directors_df 생성
-    director_path = os.path.join(args.datapath, 'directors.tsv')
+    director_path = os.path.join(args.data_path, 'directors.tsv')
     raw_director_df = pd.read_csv(director_path, sep='\t')
+    raw_director_df = raw_director_df.drop_duplicates(subset=['item'])
 
     # years_df 
-    year_path = os.path.join(args.datapath, 'years.tsv')
+    year_path = os.path.join(args.data_path, 'years.tsv')
     raw_year_df = pd.read_csv(year_path, sep='\t')
 
     # titles_df
-    title_path = os.path.join(args.datapath, 'titles.tsv')
+    title_path = os.path.join(args.data_path, 'titles.tsv')
     raw_title_df = pd.read_csv(title_path, sep='\t')
         
     # join dfs
     df_list = [raw_rating_df, raw_genre_df, raw_writer_df, raw_director_df, raw_year_df, raw_title_df]
-    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',how='outer'), df_list).fillna(0)
+    joined_rating_df = reduce(lambda  left,right: pd.merge(left,right,on='item',how='left'), df_list).fillna(0)
 
     # save joined df
     joined_rating_df.to_csv('../data/train/joined_df.csv', mode='w', index=False)

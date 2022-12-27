@@ -18,6 +18,7 @@ def main():
     args = parse_args()
     use_cuda = torch.cuda.is_available() and args.use_cuda_if_available
     device = torch.device("cuda" if use_cuda else "cpu")
+    # device = 'cpu'
 
     set_seed(args.seed)
     check_path(args.output_dir)
@@ -30,10 +31,9 @@ def main():
     train_loader, valid_loader = data_loader(args, data)
 
     # Train
-    use_trained_model = True
     if 'model.pt' in os.listdir('./output'):
         model_path = os.path.join(args.output_dir, "model.pt")
-        model = DeepFM(field_dims, args.embedding_dim, args.mlp_dims).to(device)
+        model = DeepFM(field_dims, args.embedding_dim, args.mlp_dims, args).to(device)
         # model = DeepFM(field_dims, args.embedding_dim, args.mlp_dims) # for debugging
         model.load_state_dict(torch.load(model_path))
         
@@ -56,7 +56,7 @@ def main():
         inference_rating_df = make_inference_data(sliced_df, args)
         inference_data = mapping(inference_rating_df, idx_dict, args)
         predict_data = model(inference_data)
-        # predict_data = torch.cat([inference_data[:,0:2], predict_data], dim=1) # make top_k list
+        # predict_data = torch.cat([inference_data[:,0:2], predict_data.unsqueeze(1)], dim=1) # make top_k list
         # torch.topk() # make top_k list
 
         slice_start = slice_end

@@ -145,29 +145,35 @@ def mapping(
     ) -> torch.Tensor:
 
     raw_genre_data = os.path.join(args.data_path, "genres.tsv")
+    
     raw_writer_data = os.path.join(args.data_path, "writers.tsv")
+    
     raw_director_data = os.path.join(args.data_path, "directors.tsv")
+    
     raw_year_data = os.path.join(args.data_path, "years.tsv")
     raw_title_data = os.path.join(args.data_path, "titles.tsv")
 
     raw_genre_df = pd.read_csv(raw_genre_data, sep='\t')
+    raw_genre_df = raw_genre_df.drop_duplicates(subset=['item'])
     raw_writer_df = pd.read_csv(raw_writer_data, sep='\t')
-    raw_director_df = pd.read_csv(raw_director_data, sep='\t')
+    raw_writer_df = raw_writer_df.drop_duplicates(subset=['item'])
+    raw_director_df = pd.read_csv(raw_director_data, sep='\t')     
+    raw_director_df = raw_director_df.drop_duplicates(subset=['item'])
     raw_year_df = pd.read_csv(raw_year_data, sep='\t')
     raw_title_df = pd.read_csv(raw_title_data, sep='\t')
 
     print('merge start')
-    joined_inference_df = pd.merge(inference_rating_df, raw_genre_df, left_on='item', right_on='item', how='outer')
+    joined_inference_df = pd.merge(inference_rating_df, raw_genre_df, left_on='item', right_on='item', how='left')
     del inference_rating_df, raw_genre_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_writer_df, left_on='item', right_on='item', how='outer')
+    joined_inference_df = pd.merge(joined_inference_df, raw_writer_df, left_on='item', right_on='item', how='left')
     del raw_writer_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_year_df, left_on='item', right_on='item', how='outer')
+    joined_inference_df = pd.merge(joined_inference_df, raw_year_df, left_on='item', right_on='item', how='left')
     del raw_year_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_director_df, left_on='item', right_on='item', how='outer')
+    joined_inference_df = pd.merge(joined_inference_df, raw_director_df, left_on='item', right_on='item', how='left')
     del raw_director_df
-    joined_inference_df = pd.merge(joined_inference_df, raw_title_df, left_on='item', right_on='item', how='outer')
+    joined_inference_df = pd.merge(joined_inference_df, raw_title_df, left_on='item', right_on='item', how='left')
     del raw_title_df
-    joined_inference_df = joined_inference_df.fillna(0)
+    # joined_inference_df = joined_inference_df.fillna(0)
     print('merge done')
 
 
@@ -178,9 +184,11 @@ def mapping(
     joined_inference_df['director'] = joined_inference_df['director'].map(idx_dict['director2idx'])
     joined_inference_df['year'] = joined_inference_df['year'].map(idx_dict['year2idx'])
     joined_inference_df['title'] = joined_inference_df['title'].map(idx_dict['title2idx'])
-    joined_inference_df = joined_inference_df.fillna(0)
+    # joined_inference_df = joined_inference_df.fillna(0) 
     # joined_inference_df = joined_inference_df.drop_duplicates(['user', 'item'])
 
     return torch.tensor(joined_inference_df.values).to('cuda').long()
     # return torch.tensor(joined_inference_df.values).long() # for debugging
     
+def make_top_k_list() -> list:
+    pass

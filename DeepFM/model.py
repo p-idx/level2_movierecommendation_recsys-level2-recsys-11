@@ -3,10 +3,10 @@ import torch.nn as nn
 
 
 class DeepFM(nn.Module):
-    def __init__(self, input_dims, embedding_dim, mlp_dims, drop_rate=0.1):
+    def __init__(self, input_dims, embedding_dim, mlp_dims, args, drop_rate=0.1):
         super(DeepFM, self).__init__()
         total_input_dim = int(sum(input_dims)) # n_user + n_movie + n_genre + ...
-
+        self.args = args
         # Fm component의 constant bias term과 1차 bias term
         self.bias = nn.Parameter(torch.zeros((1,)))
         self.fc = nn.Embedding(total_input_dim, 1)
@@ -50,7 +50,8 @@ class DeepFM(nn.Module):
         
         #deep component
         mlp_y = self.mlp(x).squeeze(1)
-
-        # y = torch.sigmoid(fm_y + mlp_y) # for train
-        y = fm_y + mlp_y # for inference
+        if self.args.train:
+            y = torch.sigmoid(fm_y + mlp_y) # for train
+        else:
+            y = fm_y + mlp_y # for inference
         return y

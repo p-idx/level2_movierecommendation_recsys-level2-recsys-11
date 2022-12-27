@@ -35,7 +35,7 @@ def test(device, model, valid_loader):
 
 def train(args, device, field_dims, train_loader, valid_loader):
     input_dims = field_dims
-    model = DeepFM(input_dims, args.embedding_dim, args.mlp_dims).to(device)
+    model = DeepFM(input_dims, args.embedding_dim, args.mlp_dims, args).to(device)
     bce_loss = nn.BCELoss() # Binary Cross Entropy loss
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 

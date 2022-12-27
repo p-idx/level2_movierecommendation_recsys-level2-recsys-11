@@ -1,6 +1,14 @@
 import argparse
 
 def parse_args():
+
+    def str2bool(v):
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
 
@@ -15,6 +23,8 @@ def parse_args():
     arg('--negative_threshold', default=500, type=int, help='threshold of negative samples')
     arg('--topk', default=10, type=int)
     arg('--train_ratio', default=0.9, type=float)
+    arg('--train', default='False', type=str2bool)
+
 
     arg('--embedding_dim', default=64, type=int)
     arg('--mlp_dims', default=[30, 20, 10], type=list)
