@@ -3,6 +3,9 @@ import os
 from tqdm import tqdm
 
 train_df = pd.read_csv('/opt/ml/input/data/train/train_ratings.csv')
+year_data = pd.read_csv('/opt/ml/input/data/train/years.tsv', sep='\t')
+genre_data = pd.read_csv('/opt/ml/input/data/train/genres.tsv', sep='\t')
+title_data = pd.read_csv('/opt/ml/input/data/train/titles.tsv', sep='\t')
 userid, itemid = train_df['user'].unique(), train_df['item'].unique()
 
 userid_2_index = {v:i for i,v in enumerate(userid)}
@@ -38,11 +41,24 @@ with open(userfile, "w") as f:
         f.write("\t".join([str(x) for x in row])+"\n")
 
 print("process .item")
+print("missing value preprocessing...")
+year_merge = pd.merge(train_df, year_data, on='item', how='left')
+year_merge = pd.merge(year_merge, title_data, on='item', how='left')
+year_merge = year_merge.drop_duplicates(subset=['item'])
+year_na = year_merge[year_merge.year.isna()]
+year_merge.loc[year_merge.year.isna(),'year'] = year_na['title'].apply(lambda x : x[-5:-1])
+year_merge.index = year_merge.item
+year_merge.drop(['item','user','time'], axis=1, inplace=True)
+year_merge['title'] = year_merge['title'].apply(lambda x : x[:-7])
+
+genre_agg = genre_data.groupby('item').agg(list)
+
 table = []
 for i in itemid_2_index.values():
-    table.append([i])
+    item_id = index_2_itemid[i]
+    table.append([i, year_merge.loc[item_id,'year'], year_merge.loc[item_id,'title'], " ".join(genre_agg.loc[item_id][0])])
 
 with open(itemfile, "w") as f:
-    f.write("item:token\n")
+    f.write("item:token\tyear:token\ttitle:token_seq\tgenre:token_seq\n")
     for row in table:
         f.write("\t".join([str(x) for x in row])+"\n")
