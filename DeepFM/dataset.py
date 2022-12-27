@@ -179,7 +179,7 @@ def mapping(
     joined_inference_df['year'] = joined_inference_df['year'].map(idx_dict['year2idx'])
     joined_inference_df['title'] = joined_inference_df['title'].map(idx_dict['title2idx'])
     joined_inference_df = joined_inference_df.fillna(0)
-    joined_inference_df = joined_inference_df.drop_duplicates(['user', 'item'])
+    # joined_inference_df = joined_inference_df.drop_duplicates(['user', 'item'])
 
     return torch.tensor(joined_inference_df.values).to('cuda').long()
     # return torch.tensor(joined_inference_df.values).long() # for debugging

@@ -56,7 +56,9 @@ def main():
         inference_rating_df = make_inference_data(sliced_df, args)
         inference_data = mapping(inference_rating_df, idx_dict, args)
         predict_data = model(inference_data)
-        
+        # predict_data = torch.cat([inference_data[:,0:2], predict_data], dim=1) # make top_k list
+        # torch.topk() # make top_k list
+
         slice_start = slice_end
         print(f'{(user_list.index(slice_end)+1) / (len(user_list)-1):.2f}% done')
 
