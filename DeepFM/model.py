@@ -51,6 +51,6 @@ class DeepFM(nn.Module):
         #deep component
         mlp_y = self.mlp(x).squeeze(1)
 
-        # y = torch.sigmoid(fm_y + mlp_y) # for train
-        y = fm_y + mlp_y # for inference
+        y = torch.sigmoid(fm_y + mlp_y) # for train
+        # y = fm_y + mlp_y # for inference
         return y

@@ -30,7 +30,7 @@ def main():
     train_loader, valid_loader = data_loader(args, data)
 
     # Train
-    use_trained_model = True
+
     if 'model.pt' in os.listdir('./output'):
         model_path = os.path.join(args.output_dir, "model.pt")
         model = DeepFM(field_dims, args.embedding_dim, args.mlp_dims).to(device)
@@ -39,6 +39,7 @@ def main():
         
     else:
         model = train(args, device, field_dims, train_loader, valid_loader)
+        
     model.eval()
     # Inference
     print('make inference data...')
