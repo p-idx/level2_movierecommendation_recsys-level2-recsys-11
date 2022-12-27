@@ -39,6 +39,7 @@ def main():
         
     else:
         model = train(args, device, field_dims, train_loader, valid_loader)
+        
     model.eval()
     # Inference
     print('make inference data...')
