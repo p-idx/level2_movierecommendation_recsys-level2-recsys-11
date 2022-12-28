@@ -34,9 +34,7 @@ def set_config(args, config):
 def main(args):
     print(torch.cuda.is_available())
 
-    cur = datetime.datetime.now()
-    cur = cur.strftime("%b-%d-%Y_%H-%M-%S")
-
+    cur = (datetime.datetime.today() + datetime.timedelta(hours=9)).strftime('%m%d_%H%M')
     config = Config(model=args.model, dataset="movie", config_file_list=['movie.yaml'])
     set_config(args, config)
     init_logger(config)

@@ -60,6 +60,6 @@ for i in itemid_2_index.values():
     table.append([i, year_merge.loc[item_id,'title'], year_merge.loc[item_id,'year'], " ".join(genre_agg.loc[item_id][0])]) #  
 
 with open(itemfile, "w") as f:
-    f.write("item:token\tyear:token\ttitle:token_seq\tgenre:token_seq\n") # 
+    f.write("item:token\ttitle:token_seq\tyear:token\tgenre:token_seq\n") # 
     for row in table:
         f.write("\t".join([str(x) for x in row])+"\n")
