@@ -36,7 +36,7 @@ def get_logger(logger_conf):
     return logger
 
 
-def class2dict(f):
-    return dict(
-        (name, getattr(f, name)) for name in dir(f) if not name.startswith("__")
-    )
+def check_path(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"{path} created")

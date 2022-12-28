@@ -1,89 +1,69 @@
 import torch
 import numpy as np
 import time
-from sklearn.metrics import accuracy_score, roc_auc_score
+from tqdm import tqdm
 
 
 # Negative Sampling
-def Sampling(pos_train_data, item_num, neg_ratio, pos_edges, neg_edges, sampling_sift_pos):
-    neg_candidates = np.arange(item_num)
+def Sampling(pos_train_data, item_num, neg_ratio, interacted_items, sampling_sift_pos):
+	neg_candidates = np.arange(item_num)
 
-    if sampling_sift_pos:
-        neg_items = []
-        for idx, u in enumerate(pos_train_data[0]):
+	if sampling_sift_pos:
+		neg_items = []
+		for u in pos_train_data[:,0]:
+			probs = np.ones(item_num)
+			probs[interacted_items[u]] = 0
+			probs /= np.sum(probs)
 
-            length = neg_ratio - len(neg_edges[u])  
-
-            if length > 0:
-                probs = np.ones(item_num)
-                probs[pos_edges[u]] = 0
-                probs /= np.sum(probs)
-
-                u_neg_items = np.array(neg_edges[u]).reshape(1,-1)
-                random_negs = np.random.choice(neg_candidates, size = length, p = probs, replace = True).reshape(1, -1)
-                u_neg_items = np.concatenate([u_neg_items, random_negs], axis=None).reshape(1,-1)
-
-            else:
-                u_neg_items = np.random.choice(neg_edges[u], size = neg_ratio, replace = True).reshape(1,-1)
-
-            neg_items.append(u_neg_items)
-
-        neg_items = np.concatenate(neg_items, axis = 0) 
-    
-    else:
-        neg_items = np.random.choice(neg_candidates, (len(pos_train_data[0]), neg_ratio), replace = True)
+			u_neg_items = np.random.choice(neg_candidates, size = neg_ratio, p = probs, replace = True).reshape(1, -1)
 	
-    neg_items = torch.from_numpy(neg_items)
-    neg_items = neg_items.type(torch.int64)
+			neg_items.append(u_neg_items)
+
+		neg_items = np.concatenate(neg_items, axis = 0) 
+	else:
+		neg_items = np.random.choice(neg_candidates, (len(pos_train_data[:,0]), neg_ratio), replace = True)
 	
-    return pos_train_data[0], pos_train_data[1], neg_items	# users, pos_items, neg_items
+	neg_items = torch.from_numpy(neg_items)
+	
+	return pos_train_data[:,0], pos_train_data[:,1], neg_items	# users, pos_items, neg_items
 
-
-########################### TRAINING #####################################
 
 def train(
     model, 
     optimizer, 
     train_loader, 
     valid_loader, 
-    valid_label,
-    pos_edges, 
-    neg_edges, 
-    params,
-    device
+    mask,
+    test_ground_truth_list, 
+    interacted_items,
+    args
 ): 
-    best_auc, best_epoch, curr_acc = 0, -1, 0
+    device = args.device
+    best_epoch, best_recall, best_ndcg = 0, 0, 0
     early_stop_count = 0
     early_stop = False
 
-    batches = len(train_loader.dataset) // params['batch_size']
-    if len(train_loader.dataset) % params['batch_size'] != 0:
+    batches = len(train_loader.dataset) // args.batch_size
+    if len(train_loader.dataset) % args.batch_size != 0:
         batches += 1
     print('Total training batches = {}'.format(batches))
     
     # if params['enable_tensorboard']:
     #     writer = SummaryWriter()
     
-
-    for epoch in range(params['max_epoch']):
+    for epoch in tqdm(range(args.max_epoch)):
         model.train() 
         start_time = time.time()
 
 
         for batch, x in enumerate(train_loader): # x: tensor:[users, pos_items]
-
-            users, pos_items, neg_items = Sampling(x, params['item_num'], params['negative_num'], pos_edges, neg_edges, params['sampling_sift_pos'])
+            users, pos_items, neg_items = Sampling(x, args.item_num, args.negative_num, interacted_items, args.sampling_sift_pos)
             users = users.to(device)
             pos_items = pos_items.to(device)
             neg_items = neg_items.to(device)
 
             model.zero_grad()
             loss = model(users, pos_items, neg_items)
-            train_loss = loss/params['batch_size']
-            if train_loss > 10**10:
-                breakpoint()
-
-            print(f'train_loss: {train_loss}')
             # if params['enable_tensorboard']:
             #     writer.add_scalar("Loss/train_batch", loss, batches * epoch + batch)
             loss.backward()
@@ -99,31 +79,32 @@ def train(
 
         if need_test:
             start_time = time.time()
-            acc, auc = link_test(model, valid_loader, valid_label)
+            F1_score, Precision, Recall, NDCG = \
+            test(model, valid_loader, test_ground_truth_list, mask, args.topk, args.user_num)
             # if params['enable_tensorboard']:
             #     writer.add_scalar('Results/recall@20', Recall, epoch)
             #     writer.add_scalar('Results/ndcg@20', NDCG, epoch)
             test_time = time.strftime("%H: %M: %S", time.gmtime(time.time() - start_time))
             
             print('The time for epoch {} is: train time = {}, test time = {}'.format(epoch, train_time, test_time))
-            print("Valid_AUC = {:.5f}, Valid_ACC : {:5f}".format(loss.item(), auc, acc))
-
-            if auc > best_auc:
-                best_auc, best_epoch, curr_acc = auc, epoch, acc
+            print("Loss = {:.5f}, F1-score: {:5f} \t Precision: {:.5f}\t Recall: {:.5f}\tNDCG: {:.5f}".format(loss.item(), F1_score, Precision, Recall, NDCG))
+            
+            if Recall > best_recall:
+                best_recall, best_ndcg, best_epoch = Recall, NDCG, epoch
                 early_stop_count = 0
-                torch.save(model.state_dict(), params['model_save_path'])
+                torch.save(model.state_dict(), args.model_save_path)
 
             else:
                 early_stop_count += 1
-                if early_stop_count == params['early_stop_epoch']:
+                if early_stop_count == args.early_stop_epoch:
                     early_stop = True
         
         if early_stop:
             print('##########################################')
             print('Early stop is triggered at {} epochs.'.format(epoch))
             print('Results:')
-            print('best epoch = {}, best auc = {}, acc = {}'.format(best_epoch, best_auc, curr_acc))
-            print('The best model is saved at {}'.format(params['model_save_path']))
+            print('best epoch = {}, best recall = {}, best ndcg = {}'.format(best_epoch, best_recall, best_ndcg))
+            print('The best model is saved at {}'.format(args.model_save_path))
             break
 
     # writer.flush()
@@ -219,13 +200,13 @@ def NDCGatK_r(test_data, r, k):
 	return np.sum(ndcg)
 
 
-
 def test_one_batch(X, k):
     sorted_items = X[0].numpy()
     groundTrue = X[1]
     r = getLabel(groundTrue, sorted_items)
     ret = RecallPrecision_ATk(groundTrue, r, k)
     return ret['precision'], ret['recall'], NDCGatK_r(groundTrue,r,k)
+
 
 def getLabel(test_data, pred_data):
     r = []
@@ -274,23 +255,4 @@ def test(model, test_loader, test_ground_truth_list, mask, topk, n_user):
 
     return F1_score, Precision, Recall, NDCG
 
-
-def link_test(model, valid_loader, valid_label):
-    with torch.no_grad():
-        model.eval()
-        # ui_emb_mul = model.test_forward()
-        total_pred = []
-
-        for batches, x in enumerate(valid_loader):
-            batch_users = x[0].to(model.get_device())
-            batch_items = x[1].to(model.get_device())
-            pred = model.pred_link(batch_users, batch_users)
-            pred = pred.detach().cpu().tolist()
-            total_pred.extend(pred)
-
-        total_pred = np.array(total_pred)
-        acc = accuracy_score(valid_label, total_pred > 0.5)
-        auc = roc_auc_score(valid_label, pred)
-
-    return acc, auc
 

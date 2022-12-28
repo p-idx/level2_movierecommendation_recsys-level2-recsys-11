@@ -7,22 +7,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-
-
 class UltraGCN(nn.Module):
-    def __init__(self, params, constraint_mat, ii_constraint_mat, ii_neighbor_mat):
+    def __init__(self, args, constraint_mat, ii_constraint_mat, ii_neighbor_mat):
         super(UltraGCN, self).__init__()
-        self.user_num = params['user_num']
-        self.item_num = params['item_num']
-        self.embedding_dim = params['embedding_dim']
-        self.w1 = params['w1']
-        self.w2 = params['w2']
-        self.w3 = params['w3']
-        self.w4 = params['w4']
+        self.user_num = args.user_num
+        self.item_num = args.item_num
+        self.embedding_dim = args.embedding_dim
+        self.w1 = args.w1
+        self.w2 = args.w2
+        self.w3 = args.w3
+        self.w4 = args.w4
 
-        self.negative_weight = params['negative_weight']
-        self.gamma = params['GAMMA']
-        self.lambda_ = params['LAMBDA']
+        self.negative_weight = args.negative_weight
+        self.gamma = args.GAMMA
+        self.lambda_ = args.LAMBDA
 
         self.user_embeds = nn.Embedding(self.user_num, self.embedding_dim)
         self.item_embeds = nn.Embedding(self.item_num, self.embedding_dim)
@@ -31,8 +29,7 @@ class UltraGCN(nn.Module):
         self.ii_constraint_mat = ii_constraint_mat
         self.ii_neighbor_mat = ii_neighbor_mat
 
-        self.initial_weight = params['initial_weight']
-
+        self.initial_weight = args.initial_weight
 
         self.initial_weights()
 
@@ -44,6 +41,7 @@ class UltraGCN(nn.Module):
 
     def get_omegas(self, users, pos_items, neg_items):
         device = self.get_device()
+        
         if self.w2 > 0:
             pos_weight = torch.mul(self.constraint_mat['beta_uD'][users], self.constraint_mat['beta_iD'][pos_items]).to(device)
             pow_weight = self.w1 + self.w2 * pos_weight
@@ -106,13 +104,8 @@ class UltraGCN(nn.Module):
         omega_weight = self.get_omegas(users, pos_items, neg_items)
         
         loss = self.cal_loss_L(users, pos_items, neg_items, omega_weight)
-        print(loss)
         loss += self.gamma * self.norm_loss()
-        print(loss)
         loss += self.lambda_ * self.cal_loss_I(users, pos_items)
-        print(loss)
-        # if loss / 512 > 1:
-        #     breakpoint()
         return loss
 
 
@@ -127,43 +120,3 @@ class UltraGCN(nn.Module):
     def get_device(self):
         return self.user_embeds.weight.device
 
-
-    def predict_link(self, edges):
-        device = self.get_device()
-        users = edges[0].to(device)
-        items = edges[1].to(device)
-
-        # version 1
-        user_embed = self.user_embeds(users)
-        item_embed = self.item_embeds(items)
-        out = (user_embed*item_embed).sum(dim=-1)
-
-        # version 2
-        pred = []
-        for u,i in zip(users,items):
-            user_embed2 = self.user_embeds(u)
-            item_embed2 = self.item_embeds(i)
-            
-            pred.append(user_embed2*item_embed2)
-
-        breakpoint()
-        # return (user_embed * item_embed).sum(dim=-1)
-        return pred
-    
-
-    def pred_link(self, user, item):
-        user_embed = self.user_embeds(user)
-        item_embed = self.item_embeds(item)
-
-        breakpoint()
-        return torch.dot(user_embed, item_embed)
-
-
-    def test_forward(self):
-        device = self.get_device()
-        users = torch.arange(self.user_num).to(device)
-        items = torch.arange(self.item_num).to(device)
-        user_embeds = self.user_embeds(users)
-        item_embeds = self.item_embeds(items)
-         
-        return user_embeds.mm(item_embeds.t())
