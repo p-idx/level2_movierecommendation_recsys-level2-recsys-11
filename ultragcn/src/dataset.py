@@ -14,7 +14,7 @@ def prepare_dataset(args):
     df, n_user, m_item, idx_dict = load_data(args.basepath)
 
     # train, valid, test split
-    train_data, valid_data = separate_data(df)
+    train_data, valid_data = random_split(df, args.seed)
 
     # edge, label, matrix 정의
     interacted_items, test_ground_truth_list, mask, train_mat, constraint_mat = process_data(
@@ -69,10 +69,19 @@ def load_data(basepath):
     return df, n_user, m_item, idx_dict
 
 
-def separate_data(df):
-    train = df
-    valid = train.groupby('user').tail(1)
-    train = train.drop(index=valid.index)
+def leave_last(df):
+
+    valid = df.groupby('user').tail(1)
+    train = df.drop(index=valid.index)
+    valid = valid.reset_index(drop=True)
+
+    return train, valid
+
+
+def random_split(df, seed):
+
+    valid = df.groupby('user').sample(frac=0.1, random_state=seed)
+    train = df.drop(index=valid.index)
     valid = valid.reset_index(drop=True)
 
     return train, valid
