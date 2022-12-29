@@ -14,12 +14,17 @@ userid, itemid = train_df['user'].unique(), train_df['item'].unique()
 index_2_userid = {i:v for i,v in enumerate(userid)}
 index_2_itemid = {i:v for i,v in enumerate(itemid)}
 
-# data_path = '/opt/ml/input/level2_movierecommendation_recsys-level2-recsys-11/RecBole/saved/EASE-Dec-24-2022_16-14-55.pth' # 그냥 특정 파일을 하고 싶을 때는 이걸 사용하세요
-data_path = sorted(Path('./saved').iterdir(), key=os.path.getmtime)[-1].name
+data_path = 'LightGCN-Dec-27-2022_14-14-38.pth' # 그냥 특정 파일을 하고 싶을 때는 이걸 사용하세요
+# data_path = sorted(Path('./saved').iterdir(), key=os.path.getmtime)[-1].name
 file_name = 'output/' + data_path[:-3] + 'csv'
 
 print(f'load data and model from || {data_path}')
 config, model, dataset, train_data, valid_data, test_data = load_data_and_model('saved/' + data_path)
+
+del dataset
+del train_data
+del valid_data
+del test_data
 
 print(f'change config for submit')
 config['eval_args']['split']['LS'] = 'test_only'
@@ -30,6 +35,10 @@ config['split_to'] = 0
 print('recommend top 10')
 dataset = create_dataset(config)
 train_data, valid_data, test_data = data_preparation(config, dataset)
+
+del train_data
+del valid_data
+
 a, b = full_sort_topk(np.arange(1, 31361), model, test_data, 10)
 c = b.tolist()
 

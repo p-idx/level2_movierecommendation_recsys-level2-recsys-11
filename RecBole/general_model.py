@@ -111,7 +111,7 @@ def set_config(args, config):
         config['node_dropout'] = args.node_dropout
         config['message_dropout'] = args.message_dropout
         config['reg_weight'] = args.reg_weight
-    elif args.model == 'NGCF':
+    elif args.model == 'LightGCN':
         config['embedding_size'] = args.embedding_size
         config['n_layers'] = args.n_layers
         config['reg_weight'] = args.reg_weight
