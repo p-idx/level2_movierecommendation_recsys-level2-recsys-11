@@ -8,7 +8,7 @@ import datetime
 import ast
 import logging
 
-from recbole.model.context_aware_recommender.deepfm import DeepFM
+from recbole.model.sequential_recommender.fpmc import FPMC
 
 from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
@@ -25,11 +25,12 @@ def set_config(args, config):
     init_seed(config['seed'], config['reproducibility'])
     config['learning_rate'] = args.lr
     config['log_wandb'] = True
-    config['repeatable'] = False
+    config['eval_args']['order'] = 'TO'
+    config['repeatable'] = True
+    config['show_progress'] = False
 
-    if args.model == 'DeepFM':
-        config['dropout_prob'] = args.dropout_prob
-        config['mlp_hidden_size'] = args.mlp_hidden_size
+    if args.model == 'FPMC':
+        config['loss_type'] = args.loss_type
         config['embedding_size'] = args.embedding_size
 
 
@@ -79,11 +80,12 @@ if __name__ == '__main__':
             raise argparse.ArgumentTypeError('Boolean value expected.')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', type=str, default='DeepFM')
+    parser.add_argument('-m', '--model', type=str, default='FPMC')
     parser.add_argument('--lr', type=float, default=1e-3)
 
     parser.add_argument('--dropout_prob', type=float, default=0.2)
     parser.add_argument('--mlp_hidden_size', type=arg_as_lst, default=[128,128,128])
+    parser.add_argument('--loss_type', type=str, default='BPR')
 
     parser.add_argument('--embedding_size', type=int, default=10)
 

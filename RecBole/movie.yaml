@@ -25,7 +25,7 @@ TIME_FIELD: 'timestamp' # for sequential model
 # LABEL_FIELD: label # 정답라벨
 
 load_col: # 사용할 피쳐.
-    inter: ['user', 'item', 'rating'] # inter에 있는 피쳐니까 이렇게 표시
+    inter: ['user', 'item', 'rating', 'timestamp'] # inter에 있는 피쳐니까 이렇게 표시
     user: ['user']
     item: ['item', 'year', 'title', 'genre']
 val_interval:
@@ -59,7 +59,7 @@ eval_args :
         #LS : 'test_only' #LS로 하면 ['valid_and_test', 'valid_only', 'test_only']
     mode : 'full' # ['full','unixxx','popxxx','labeled'] 모델로 평가할 데이터 범위를 정한다.
                     # labeled 빼면 전부 암묵적 피드백에 대한 것. xxx에 숫자를 넣는다. 오답을 몇개 둘지!
-repeatable : False #본거에 대해서 추천을 해줄지. 시퀀스에 대해서는 작동하지 않는다.
+repeatable : True #본거에 대해서 추천을 해줄지. 시퀀스에 대해서는 작동하지 않는다.
 metrics : ['Recall', 'MRR', 'NDCG', 'Hit']
         # 랭킹 지표 Recall, MRR, NDCG, Hit, MAP, Precision, GAUC, ItemCoverage, AveragePopularity, GiniIndex, ShannonEntropy, TailPercentage
         # 평점 지표 AUC, MAE, RMSE, LogLoss
@@ -68,7 +68,7 @@ valid_metric : 'Recall@10' # 얼리스타핑에 사용할 지표. 우리의 정�
 eval_batch_size: 4096 #평가 시의 배치 사이즈
 
 test_args:
-    
+
 
 # embedding_size: 128  0.1086 -> 0.1204 -> ...
 # reg_weight : 750

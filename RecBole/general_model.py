@@ -54,6 +54,7 @@ def set_config(args, config):
     init_seed(config['seed'], config['reproducibility'])
     config['learning_rate'] = args.lr
     config['log_wandb'] = True
+    config['repeatable'] = False
 
     if args.model == 'EASE': #끝
         config['reg_weight'] = args.reg_weight
