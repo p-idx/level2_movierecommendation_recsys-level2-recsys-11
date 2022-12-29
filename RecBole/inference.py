@@ -14,7 +14,7 @@ userid, itemid = train_df['user'].unique(), train_df['item'].unique()
 index_2_userid = {i:v for i,v in enumerate(userid)}
 index_2_itemid = {i:v for i,v in enumerate(itemid)}
 
-data_path = 'LightGCN-Dec-27-2022_14-14-38.pth' # 그냥 특정 파일을 하고 싶을 때는 이걸 사용하세요
+data_path = 'DeepFM-Dec-29-2022_13-59-59.pth' # 그냥 특정 파일을 하고 싶을 때는 이걸 사용하세요
 # data_path = sorted(Path('./saved').iterdir(), key=os.path.getmtime)[-1].name
 file_name = 'output/' + data_path[:-3] + 'csv'
 
@@ -29,22 +29,26 @@ del test_data
 print(f'change config for submit')
 config['eval_args']['split']['LS'] = 'test_only'
 del config['eval_args']['split']['RS']
-config['split_to'] = 0
+config['split_to'] = 20
 
 
 print('recommend top 10')
 dataset = create_dataset(config)
 train_data, valid_data, test_data = data_preparation(config, dataset)
 
+del dataset
 del train_data
 del valid_data
 
-a, b = full_sort_topk(np.arange(1, 31361), model, test_data, 10)
-c = b.tolist()
+lst = []
+for i in tqdm([0, 10000, 20000, 30000]):
+    a, b = full_sort_topk(np.arange(i+1, i + 10001 if i != 30000 else 31361), model.to('cpu'), test_data, 10, 'cpu')
+    c = b.tolist()
+    lst.extend(c)
 
 print('top 10 recommended. to csv')
 answer = []
-for i, j in tqdm(enumerate(c)):
+for i, j in tqdm(enumerate(lst)):
     name = index_2_userid[i]
     for k in j:
         answer.append((name, index_2_itemid[k-1]))
