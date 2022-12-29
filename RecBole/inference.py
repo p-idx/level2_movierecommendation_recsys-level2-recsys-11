@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 import torch
+import gc
 from recbole.quick_start.quick_start import load_data_and_model
 from recbole.utils.case_study import full_sort_topk
 from recbole.data import create_dataset, data_preparation
@@ -19,7 +20,11 @@ data_path = 'DeepFM-Dec-29-2022_13-59-59.pth' # 그냥 특정 파일을 하고 �
 file_name = 'output/' + data_path[:-3] + 'csv'
 
 print(f'load data and model from || {data_path}')
-config, model, dataset, train_data, valid_data, test_data = load_data_and_model('saved/' + data_path)
+config, model, dataset, train_data, valid_data, test_data = load_data_and_model(data_path)
+del dataset
+del train_data
+del valid_data
+del test_data
 
 del dataset
 del train_data
@@ -29,9 +34,9 @@ del test_data
 print(f'change config for submit')
 config['eval_args']['split']['LS'] = 'test_only'
 del config['eval_args']['split']['RS']
-config['split_to'] = 20
-
-
+config['split_to'] = 20               # default = 0, cuda out of memory 때문에 늘리기
+# config["eval_batch_size"] = 128        # cuda out of memory 해결 방법 : 배치사이즈를 낮춰봐라 (실패)
+# config["train_batch_size"] = 128       # cuda out of memory 해결 방법 : 배치사이즈를 낮춰봐라 (실패)
 print('recommend top 10')
 dataset = create_dataset(config)
 train_data, valid_data, test_data = data_preparation(config, dataset)

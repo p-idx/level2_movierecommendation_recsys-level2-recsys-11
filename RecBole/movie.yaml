@@ -18,7 +18,7 @@ seq_separator: " " # 시퀀스 구분자
 USER_ID_FIELD: 'user' #유저
 ITEM_ID_FIELD: 'item' #아이템
 RATING_FIELD: 'rating' #평점. 어느 모델이든 얘네들 있든 없든 상관은 없다.
-TIME_FIELD: 'timestamp'
+TIME_FIELD: 'timestamp' # for sequential model
 # seq_len: None
 
     #for point-wise 라벨
@@ -67,7 +67,8 @@ topk : 10 #평가 시에 몇 개 추천할지
 valid_metric : 'Recall@10' # 얼리스타핑에 사용할 지표. 우리의 정답지에 애초에 순위가 안 나와있다. 순위를 고려한 지표를 걸수는 없다.
 eval_batch_size: 4096 #평가 시의 배치 사이즈
 
+test_args:
+    
 
-
-embedding_size: 128
-reg_weight : 750
+# embedding_size: 128  0.1086 -> 0.1204 -> ...
+# reg_weight : 750

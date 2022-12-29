@@ -33,8 +33,9 @@ def set_config(args, config):
 
 def main(args):
     print(torch.cuda.is_available())
-
-    cur = (datetime.datetime.today() + datetime.timedelta(hours=9)).strftime('%m%d_%H%M')
+    cur = datetime.datetime.now() + datetime.timedelta(hours=9)
+    cur = cur.strftime("%b-%d-%Y_%H-%M-%S")
+    # cur = (datetime.datetime.today() + datetime.timedelta(hours=9)).strftime('%m%d_%H%M')
     config = Config(model=args.model, dataset="movie", config_file_list=['movie.yaml'])
     set_config(args, config)
     init_logger(config)
@@ -76,7 +77,7 @@ if __name__ == '__main__':
             raise argparse.ArgumentTypeError('Boolean value expected.')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', type=str, default='EASE')
+    parser.add_argument('-m', '--model', type=str, default='DeepFM')
     parser.add_argument('--lr', type=float, default=1e-3)
 
     parser.add_argument('--dropout_prob', type=float, default=0.2)
