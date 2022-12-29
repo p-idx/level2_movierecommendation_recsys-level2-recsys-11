@@ -10,6 +10,7 @@ def parse_args():
     arg('--seed', default=42, type=int)
     arg('--use_cuda_if_available', default=True, type=bool)
     arg('--wandb', default=True, type=bool)
+    arg('--inference', default=False, type=bool)
 
     arg('--basepath', default='../data/train', type=str, help='data directory')
     arg('--model_save_path', default='./output', type=str, help='model directory')

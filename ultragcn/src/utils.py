@@ -1,9 +1,10 @@
 import os
 import random
-
+import datetime
 import numpy as np
 import torch
 import pickle
+
 
 
 class process:
@@ -54,3 +55,15 @@ def pstore(x, path):
     with open(path, 'wb') as f:
         pickle.dump(x, f)
     print('store object in path = {} ok'.format(path))
+
+
+def get_local_time():
+    r"""Get current time
+
+    Returns:
+        str: current time
+    """
+    cur = datetime.datetime.now() + datetime.timedelta(hours=9)
+    cur = cur.strftime("%b-%d-%Y_%H-%M-%S")
+
+    return cur

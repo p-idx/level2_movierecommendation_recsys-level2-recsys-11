@@ -12,6 +12,7 @@ from src.utils import pload, pstore
 def prepare_dataset(args):
     # load label encoded data
     df, n_user, m_item, idx_dict = load_data(args.basepath)
+    print(f'{n_user} of users   |   {m_item} of items')
 
     # train, valid, test split
     train_data, valid_data = random_split(df, args.seed)
@@ -35,7 +36,7 @@ def prepare_dataset(args):
 
  
     return constraint_mat, ii_constraint_mat, ii_neighbor_mat, train_loader, valid_loader, \
-            interacted_items, test_ground_truth_list, mask, n_user, m_item
+            interacted_items, test_ground_truth_list, mask, n_user, m_item, idx_dict
 
 
 def load_data(basepath):

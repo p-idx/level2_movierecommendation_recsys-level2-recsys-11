@@ -1,9 +1,13 @@
 import os
 import torch
 import numpy as np
+import pandas as pd
 import time
 from tqdm import tqdm
 import wandb
+import torch.utils.data as data
+from src.utils import get_local_time
+import datetime
 
 
 # Negative Sampling
@@ -56,7 +60,6 @@ def train(
     for epoch in tqdm(range(args.max_epoch)):
         model.train() 
         start_time = time.time()
-
 
         for batch, x in enumerate(train_loader): # x: tensor:[users, pos_items]
             users, pos_items, neg_items = Sampling(x, args.item_num, args.negative_num, interacted_items, args.sampling_sift_pos)
@@ -237,7 +240,7 @@ def test(model, test_loader, test_ground_truth_list, mask, topk, n_user):
             batch_users = batch_users.to(model.get_device())
             rating = model.test_foward(batch_users) 
             rating = rating.cpu()
-            # rating += mask[batch_users]
+            rating += mask[batch_users]
             
             _, rating_K = torch.topk(rating, k=topk)
             rating_list.append(rating_K)
@@ -260,5 +263,40 @@ def test(model, test_loader, test_ground_truth_list, mask, topk, n_user):
     F1_score = 2 * (Precision * Recall) / (Precision + Recall)
 
     return F1_score, Precision, Recall, NDCG
+
+
+def inference(args, model, n_user, mask, idx_dict):
+    device = args.device
+
+    test_loader = data.DataLoader(list(range(n_user)), batch_size=args.batch_size, shuffle=False, num_workers=4)
+
+    total_items = []
+
+    with torch.no_grad():
+        model.eval()
+        for idx, batch_users in enumerate(test_loader):
+
+            batch_users = batch_users.to(device)
+            rating = model.test_foward(batch_users)
+            rating = rating.cpu()
+            rating += mask[batch_users]
+
+            _, rating_K = torch.topk(rating, k=args.topk)
+
+            batch_length = batch_users.shape[0]
+            total_items.extend(rating_K.view(batch_length*10))
+
+    # change index to real user and item values
+    idx2user = idx_dict['idx2user']
+    idx2item = idx_dict['idx2item']
+
+    true_users = [idx2user[u] for u in range(n_user) for _ in range(args.topk)]
+    true_items = [idx2item[i.item()] for i in total_items]
+
+    # save as csv file
+    cur = get_local_time()
+    pd.DataFrame({'user': true_users, 'item': true_items}).to_csv(
+        os.path.join(args.model_save_path, cur+'_submission.csv'), index=False
+    )
 
 
