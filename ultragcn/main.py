@@ -1,5 +1,7 @@
 import pandas as pd
 import torch
+import wandb
+
 from args import parse_args
 from src.dataset import prepare_dataset
 from src.model import UltraGCN
@@ -16,6 +18,15 @@ if __name__ == "__main__":
 
     setSeeds()
     check_path(args.model_save_path)
+
+    if args.wandb:
+        wandb.login()
+        wandb.init(
+            project='movie_ultragcn',
+            name=f'emb_dim={args.embedding_dim}, K={args.ii_neighbor_num}, gamma={args.GAMMA}, lambda={args.LAMBDA}'
+        )
+        wandb.config.update(args)
+    
     
     print('1. Loading Dataset...')
     constraint_mat, ii_constraint_mat, ii_neighbor_mat, train_loader, valid_loader, \
@@ -40,3 +51,4 @@ if __name__ == "__main__":
     )
 
     print('Training Done!')
+    wandb.finish()

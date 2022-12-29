@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 import torch
+import pickle
 
 
 class process:
@@ -40,3 +41,16 @@ def check_path(path):
     if not os.path.exists(path):
         os.makedirs(path)
         print(f"{path} created")
+
+
+def pload(path):
+    with open(path, 'rb') as f:
+        res = pickle.load(f)
+    print('load path = {} object'.format(path))
+    return res
+
+
+def pstore(x, path):
+    with open(path, 'wb') as f:
+        pickle.dump(x, f)
+    print('store object in path = {} ok'.format(path))

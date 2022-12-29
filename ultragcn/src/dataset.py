@@ -6,6 +6,8 @@ import torch.utils.data as data
 import scipy.sparse as sp
 from tqdm import tqdm
 
+from src.utils import pload, pstore
+
 
 def prepare_dataset(args):
     # load label encoded data
@@ -23,7 +25,14 @@ def prepare_dataset(args):
     valid_loader = data.DataLoader(list(range(n_user)), batch_size=args.batch_size, shuffle=False, num_workers=4)
 
     # Compute \Omega to extend UltraGCN to the item-item occurence graph
-    ii_neighbor_mat, ii_constraint_mat = get_ii_constraint_mat(train_mat, args.ii_neighbor_num)
+    if os.path.exists(args.ii_cons_mat_path):
+        ii_constraint_mat = pload(args.ii_cons_mat_path)
+        ii_neighbor_mat = pload(args.ii_neigh_mat_path)
+    else:
+        ii_neighbor_mat, ii_constraint_mat = get_ii_constraint_mat(train_mat, args.ii_neighbor_num)
+        pstore(ii_neighbor_mat, args.ii_neigh_mat_path)
+        pstore(ii_constraint_mat, args.ii_cons_mat_path)
+
  
     return constraint_mat, ii_constraint_mat, ii_neighbor_mat, train_loader, valid_loader, \
             interacted_items, test_ground_truth_list, mask, n_user, m_item

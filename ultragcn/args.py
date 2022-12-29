@@ -9,13 +9,16 @@ def parse_args():
 
     arg('--seed', default=42, type=int)
     arg('--use_cuda_if_available', default=True, type=bool)
+    arg('--wandb', default=True, type=bool)
 
     arg('--basepath', default='../data/train', type=str, help='data directory')
-    arg('--model_save_path', default='./output/best_model.pt', type=str, help='model directory')
+    arg('--model_save_path', default='./output', type=str, help='model directory')
+    arg('--ii_cons_mat_path', default='./output/ii_constraint_mat', type=str)
+    arg('--ii_neigh_mat_path', default='./output/ii_neigh_mat_path', type=str)
 
-    arg('--negative_num', default=200, type=int, help='number of negative samples')
-    arg('--negative_weight', default=200, type=int, help='number of negative samples')
-    arg('--ii_neighbor_num', default=10, type=int)
+    arg('--negative_num', default=200, type=int, help='number of negative samples for each positive pair')
+    arg('--negative_weight', default=200, type=int)
+    arg('--ii_neighbor_num', default=10, type=int, help='K number of similar items')
     arg('--topk', default=10, type=int)
     arg('--train_ratio', default=0.9, type=float)
 

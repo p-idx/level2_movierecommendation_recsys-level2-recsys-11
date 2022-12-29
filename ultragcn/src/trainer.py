@@ -1,7 +1,9 @@
+import os
 import torch
 import numpy as np
 import time
 from tqdm import tqdm
+import wandb
 
 
 # Negative Sampling
@@ -84,6 +86,9 @@ def train(
             # if params['enable_tensorboard']:
             #     writer.add_scalar('Results/recall@20', Recall, epoch)
             #     writer.add_scalar('Results/ndcg@20', NDCG, epoch)
+
+            wandb.log(dict(epoch=epoch, train_loss=loss.item(), Recall=Recall, NDCG=NDCG, F1_score=F1_score, Precision=Precision))
+
             test_time = time.strftime("%H: %M: %S", time.gmtime(time.time() - start_time))
             
             print('The time for epoch {} is: train time = {}, test time = {}'.format(epoch, train_time, test_time))
@@ -92,7 +97,8 @@ def train(
             if Recall > best_recall:
                 best_recall, best_ndcg, best_epoch = Recall, NDCG, epoch
                 early_stop_count = 0
-                torch.save(model.state_dict(), args.model_save_path)
+                save_path = os.path.join(args.model_save_path, 'best_model.pt')
+                torch.save(model.state_dict(), save_path)
 
             else:
                 early_stop_count += 1
