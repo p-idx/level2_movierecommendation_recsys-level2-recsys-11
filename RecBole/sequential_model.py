@@ -9,6 +9,7 @@ import ast
 import logging
 
 from recbole.model.sequential_recommender.fpmc import FPMC
+from recbole.model.sequential_recommender.sasrec import SASRec
 
 from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
@@ -80,14 +81,24 @@ if __name__ == '__main__':
             raise argparse.ArgumentTypeError('Boolean value expected.')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', type=str, default='FPMC')
+    parser.add_argument('-m', '--model', type=str, default='SASRec')
     parser.add_argument('--lr', type=float, default=1e-3)
 
     parser.add_argument('--dropout_prob', type=float, default=0.2)
     parser.add_argument('--mlp_hidden_size', type=arg_as_lst, default=[128,128,128])
     parser.add_argument('--loss_type', type=str, default='BPR')
-
     parser.add_argument('--embedding_size', type=int, default=10)
+
+    parser.add_argument('--n_layers', type=int, default=3)
+    parser.add_argument('--n_heads', type=int, default=2)
+    parser.add_argument('--inner_size', type=int, default=256)
+    parser.add_argument('--hidden_dropoup_prob', type=float, default=0.5)
+    parser.add_argument('--attn_dropout_prob', type=float, default=0.5)
+    parser.add_argument('--hidden_act', type=str, default='gelu')
+    parser.add_argument('--layer_norm_eps', type=float, default=1e-12)
+    parser.add_argument('--initializer_range', type=float, default=0.02)
+    
+    
 
     args = parser.parse_args()
     main(args)
