@@ -32,7 +32,7 @@ val_interval:
     rating: "[0,1]"
 user_inter_num_interval: "[0,inf)"
 item_inter_num_interval: "[0,inf)"
-
+loss_type: "BPR"  # sequential model에서 BPR loss를 쓰기 위함
 # 학습 설정
 epochs: 300
 train_batch_size: 2048
@@ -66,8 +66,6 @@ metrics : ['Recall', 'MRR', 'NDCG', 'Hit']
 topk : 10 #평가 시에 몇 개 추천할지
 valid_metric : 'Recall@10' # 얼리스타핑에 사용할 지표. 우리의 정답지에 애초에 순위가 안 나와있다. 순위를 고려한 지표를 걸수는 없다.
 eval_batch_size: 4096 #평가 시의 배치 사이즈
-
-test_args:
 
 
 # embedding_size: 128  0.1086 -> 0.1204 -> ...
