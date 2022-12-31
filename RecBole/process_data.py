@@ -25,14 +25,14 @@ os.makedirs(path, exist_ok=True)
 print("process .inter")
 train_df['timestamp'] = train_df['time'].apply(lambda x : datetime.fromtimestamp(x))
 train_df['inter_year'] = train_df['timestamp'].apply(lambda x : x.year)
-train_df.drop(['time','timestamp'], axis=1, inplace=True)
+# train_df.drop(['time','timestamp'], axis=1, inplace=True)
 table = []
-for user, item, inter_year in tqdm(zip(train_df.user, train_df.item, train_df.inter_year)):
+for user, item, timestamp in tqdm(zip(train_df.user, train_df.item, train_df.timestamp)):
     uid, iid = userid_2_index[user], itemid_2_index[item]
-    table.append([uid, iid, 1]) #, inter_year
+    table.append([uid, iid, 1, timestamp]) #, inter_year
 
 with open(interfile, "w") as f:
-    f.write("user:token\titem:token\trating:float\tinter_year:token\n")
+    f.write("user:token\titem:token\trating:float\ttimestamp:token\n")
     for row in table:
         f.write("\t".join([str(x) for x in row])+"\n")
 
