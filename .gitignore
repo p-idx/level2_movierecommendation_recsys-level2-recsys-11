@@ -209,6 +209,8 @@ data/eval/
 data/train/
 *.pt
 *.output
+*/ensembles/
+ensembles/
 
 #Recbole
 RecBole/log/

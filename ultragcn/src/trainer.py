@@ -79,8 +79,8 @@ def train(
         #     writer.add_scalar("Loss/train_epoch", loss, epoch)
 
         need_test = True
-        if epoch < 50 and epoch % 5 != 0:
-            need_test = False
+        # if epoch < 50 and epoch % 5 != 0:
+        #     need_test = False
 
         if need_test:
             start_time = time.time()
