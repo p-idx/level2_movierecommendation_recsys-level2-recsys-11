@@ -208,3 +208,5 @@ poetry.toml
 data/
 *.pt
 *.output
+ensembles/*
+wandb/*

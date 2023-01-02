@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import tqdm
 from torch.optim import Adam
+import wandb
 
 from utils import ndcg_k, recall_at_k
 
@@ -72,6 +73,8 @@ class Trainer:
             "NDCG@10": "{:.4f}".format(ndcg[1]),
         }
         print(post_fix)
+        wandb_postfix = {key: float(value) for key, value in post_fix.items() if key != "Epoch"}
+        wandb.log(wandb_postfix)
 
         return [recall[0], ndcg[0], recall[1], ndcg[1]], str(post_fix)
 
@@ -256,6 +259,9 @@ class FinetuneTrainer(Trainer):
                 "rec_avg_loss": "{:.4f}".format(rec_avg_loss / len(rec_data_iter)),
                 "rec_cur_loss": "{:.4f}".format(rec_cur_loss),
             }
+
+            wandb_postfix = {key: float(value) for key, value in post_fix.items()}
+            wandb.log(wandb_postfix)
 
             if (epoch + 1) % self.args.log_freq == 0:
                 print(str(post_fix))
