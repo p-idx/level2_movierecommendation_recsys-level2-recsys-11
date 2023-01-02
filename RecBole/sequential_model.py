@@ -33,8 +33,16 @@ def set_config(args, config):
     if args.model == 'FPMC':
         config['loss_type'] = args.loss_type
         config['embedding_size'] = args.embedding_size
-
-
+    elif args.model == 'SASRec':
+        config['n_layers'] = args.n_layers
+        config['n_heads'] = args.n_heads
+        config['inner_size'] = args.inner_size
+        config['hidden_dropoup_prob'] = args.hidden_dropoup_prob
+        config['attn_dropout_prob'] = args.attn_dropout_prob
+        config['hidden_act'] = args.hidden_act
+        config['layer_norm_eps'] = args.layer_norm_eps
+        config['initializer_range'] = args.initializer_range
+        
 def main(args):
     print(torch.cuda.is_available())
     cur = datetime.datetime.now() + datetime.timedelta(hours=9)
@@ -89,6 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('--loss_type', type=str, default='BPR')
     parser.add_argument('--embedding_size', type=int, default=10)
 
+    #SASRec
     parser.add_argument('--n_layers', type=int, default=3)
     parser.add_argument('--n_heads', type=int, default=2)
     parser.add_argument('--inner_size', type=int, default=256)
