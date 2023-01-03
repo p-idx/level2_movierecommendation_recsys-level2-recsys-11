@@ -5,7 +5,7 @@ from tqdm import tqdm
 import numpy as np
 import os
 
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score, roc_auc_score, recall_score
 from model import DeepFM
 
 def test(device, model, valid_loader):
@@ -30,8 +30,9 @@ def test(device, model, valid_loader):
 
     rounded_pred = np.rint(total_pred)
     acc = accuracy_score(total_ans, rounded_pred)
+    recall = recall_score(total_ans, rounded_pred)
 
-    return auc, acc
+    return auc, acc, recall
 
 def train(args, device, field_dims, train_loader, valid_loader):
     input_dims = field_dims
@@ -54,9 +55,9 @@ def train(args, device, field_dims, train_loader, valid_loader):
             loss.backward()
             optimizer.step()
 
-        AUC, ACC = test(device, model, valid_loader)   # validation
+        AUC, ACC, RECALL = test(device, model, valid_loader)   # validation
 
-        print(f"EPOCH({epoch})  TRAIN LOSS: {loss:.3f}  VALID AUC: {AUC:.3f}    VALID ACC: {ACC:.3f}")
+        print(f"EPOCH({epoch})  TRAIN LOSS: {loss:.3f}  VALID AUC: {AUC:.3f}    VALID ACC: {ACC:.3f}    VALID RECALL: {RECALL: .3f}")
 
         if AUC > best_auc:
             best_epoch, best_auc, best_acc = epoch, AUC, ACC

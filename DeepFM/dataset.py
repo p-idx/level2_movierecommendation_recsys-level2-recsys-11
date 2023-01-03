@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 
 def preprocess(joined_rating_df):
     joined_rating_df = joined_rating_df.copy()
+    joined_rating_df = joined_rating_df.fillna(0)
     
     print('DATA PREPROCESSING...')
     # user, item을 index로 mapping
@@ -173,22 +174,22 @@ def mapping(
     del raw_director_df
     joined_inference_df = pd.merge(joined_inference_df, raw_title_df, left_on='item', right_on='item', how='left')
     del raw_title_df
-    # joined_inference_df = joined_inference_df.fillna(0)
+    joined_inference_df = joined_inference_df.fillna(0)
     print('merge done')
 
 
-    joined_inference_df['user'] = joined_inference_df['user'].map(idx_dict['user2idx'])
+    # joined_inference_df['user'] = joined_inference_df['user'].map(idx_dict['user2idx']) # main에서 slice for loop 돌기 전에 함
     joined_inference_df['item'] = joined_inference_df['item'].map(idx_dict['item2idx'])
     joined_inference_df['genre'] = joined_inference_df['genre'].map(idx_dict['genre2idx'])
-    joined_inference_df['writer'] = joined_inference_df['writer'].map(idx_dict['writer2idx'])
-    joined_inference_df['director'] = joined_inference_df['director'].map(idx_dict['director2idx'])
+    joined_inference_df['writer'] = joined_inference_df['writer'].astype('string').map(idx_dict['writer2idx']) # dtype을 string으로 바꿔줘야 dict의 key값으로 인식
+    joined_inference_df['director'] = joined_inference_df['director'].astype('string').map(idx_dict['director2idx']) # dtype을 string으로 바꿔줘야 dict의 key값으로 인식
     joined_inference_df['year'] = joined_inference_df['year'].map(idx_dict['year2idx'])
     joined_inference_df['title'] = joined_inference_df['title'].map(idx_dict['title2idx'])
     # joined_inference_df = joined_inference_df.fillna(0) 
     # joined_inference_df = joined_inference_df.drop_duplicates(['user', 'item'])
 
-    return torch.tensor(joined_inference_df.values).to('cuda').long()
-    # return torch.tensor(joined_inference_df.values).long() # for debugging
+    # return torch.tensor(joined_inference_df.values).to('cuda').long()
+    return torch.tensor(joined_inference_df.values).long() # for debugging
     
 def make_top_k_list() -> list:
     pass
