@@ -29,6 +29,7 @@ def set_config(args, config):
     config['eval_args']['order'] = 'TO'
     config['repeatable'] = True
     config['show_progress'] = False
+    config['loss_type'] = args.loss_type
 
     if args.model == 'FPMC':
         config['loss_type'] = args.loss_type
@@ -42,6 +43,8 @@ def set_config(args, config):
         config['hidden_act'] = args.hidden_act
         config['layer_norm_eps'] = args.layer_norm_eps
         config['initializer_range'] = args.initializer_range
+        config['weight_decay'] = args.weight_decay
+        
         
 def main(args):
     print(torch.cuda.is_available())
@@ -106,6 +109,7 @@ if __name__ == '__main__':
     parser.add_argument('--hidden_act', type=str, default='gelu')
     parser.add_argument('--layer_norm_eps', type=float, default=1e-12)
     parser.add_argument('--initializer_range', type=float, default=0.02)
+    parser.add_argument('--weight_decay', type=float, default=0.1)
     
     
 
