@@ -26,11 +26,11 @@ def parse_args():
     arg('--train', default='False', type=str2bool)
 
 
-    arg('--embedding_dim', default=64, type=int)
+    arg('--embedding_dim', default=16, type=int)
     arg('--mlp_dims', default=[30, 20, 10], type=list)
     arg('--lr', default=1e-3, type=float)
     arg('--num_epochs', default=14, type=int)
-    arg('--drop_rate', default=0.1, type=float)
+    arg('--drop_rate', default=0.4, type=float)
     arg('--early_stopping', default=100, type=int)
 
     args = parser.parse_args()
