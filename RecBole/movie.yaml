@@ -25,7 +25,7 @@ TIME_FIELD: 'timestamp' # for sequential model
 # LABEL_FIELD: label # 정답라벨
 
 load_col: # 사용할 피쳐.
-    inter: ['user', 'item', 'rating', 'timestamp'] # inter에 있는 피쳐니까 이렇게 표시
+    inter: ['user', 'item', 'rating', 'timestamp' ] #,  SASRec 쓰려면 timestamp 추가
     user: ['user']
     item: ['item', 'year', 'title', 'genre']
 val_interval:
