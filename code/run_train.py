@@ -1,5 +1,6 @@
 import argparse
 import os
+import wandb
 
 import numpy as np
 import torch
@@ -123,6 +124,13 @@ def main():
 
     model = S3RecModel(args=args)
 
+    wandb.login()
+    wandb.init(
+        project='SASRec_test',
+        name='SASRec (Hyperparameters)' + "  |  " + "(Time)"
+    )
+    wandb.config.update(args)
+
     trainer = FinetuneTrainer(
         model, train_dataloader, eval_dataloader, test_dataloader, None, args
     )
@@ -156,6 +164,7 @@ def main():
     trainer.model.load_state_dict(torch.load(args.checkpoint_path))
     scores, result_info = trainer.test(0)
     print(result_info)
+    wandb.finish()
 
 
 if __name__ == "__main__":
