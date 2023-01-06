@@ -28,7 +28,7 @@ def get_parser():
     parser.add_argument('--valid', default=1, type=int)
 
     
-    parser.add_argument("--f", default=8, type=int)
+    parser.add_argument("--f", default=64, type=int)
     parser.add_argument("--alpha", default=1, type=int)
     parser.add_argument("--l1", default=0.5, type=int)
     parser.add_argument("--data_dir", default="/opt/ml/input/data/train/", type=str)
@@ -48,64 +48,74 @@ def loss(rating_mat, X, Y, C, l1):
     return loss_front + loss_back
 
 
-def als(rating_mat: torch.tensor, answers: list, alpha=1, iter=10, l1=0.1, feature_dim=8, device='cuda', inference=False):
+def als(rating_mat: torch.tensor, answers: list, alpha=1, iter=9, l1=0.1, feature_dim=8, device='cuda', inference=False):
     # x_u = ((Y.T*Y + Y.T*(Cu - I) * Y) + lambda*I)^-1 * (X.T * Cu * p(u))
     # y_i = ((X.T*X + X.T*(Ci - I) * X) + lambda*I)^-1 * (Y.T * Ci * p(i))
+    if not os.path.exists('model/'):
+        os.mkdir('model/')
 
-        with torch.no_grad():
-            C = rating_mat * alpha + 1
-            P = rating_mat
+    with torch.no_grad():
+        C = rating_mat * alpha + 1
+        P = rating_mat
 
-            user_size = rating_mat.size(0)
-            item_size = rating_mat.size(1)
+        user_size = rating_mat.size(0)
+        item_size = rating_mat.size(1)
 
-            X = torch.rand((user_size, feature_dim), dtype=torch.float32).to(device)
-            Y = torch.rand((item_size, feature_dim), dtype=torch.float32).to(device)
+        X = torch.rand((user_size, feature_dim), dtype=torch.float32).to(device)
+        Y = torch.rand((item_size, feature_dim), dtype=torch.float32).to(device)
 
-            # X_I = torch.eye(user_size)
-            # Y_I = torch.eye(item_size)
+        # X_I = torch.eye(user_size)
+        # Y_I = torch.eye(item_size)
 
-            I = torch.eye(feature_dim, dtype=torch.float32).to(device)
-            lI = l1 * I
+        I = torch.eye(feature_dim, dtype=torch.float32).to(device)
+        lI = l1 * I
+
+        pred_rating_mat = torch.matmul(X, Y.T)
+        pred_rating_mat[rating_mat > 0] = 0.0
+        _, recs = torch.sort(pred_rating_mat, dim=-1, descending=True)
+        preds = recs.cpu().numpy()
+
+        
+        print('random init.')
+        print(f'loss: {loss(rating_mat, X, Y, C, l1)}')
+        if not inference:
+            get_full_sort_score(answers, preds)
+
+        recall = 0.0
+        for it in range(iter):
+            # xTx = X.T.matmul(X)
+            # yTy = Y.T.matmul(Y)
+
+            for u in tqdm(range(user_size)):
+                # Cu = torch.diag(C[u])
+                left = Y.T.mul(C[u]).matmul(Y) + lI
+                right = Y.T.mul(C[u]).matmul(P[u])
+                X[u] = torch.linalg.solve(left, right)
+
+            for i in tqdm(range(item_size)):
+                # Ci = torch.diag(C[:, i])
+                left = X.T.mul(C[:, i]).matmul(X) + lI
+                right = X.T.mul(C[:, i]).matmul(P[:, i])
+                Y[i] = torch.linalg.solve(left, right)
 
             pred_rating_mat = torch.matmul(X, Y.T)
             pred_rating_mat[rating_mat > 0] = 0.0
             _, recs = torch.sort(pred_rating_mat, dim=-1, descending=True)
             preds = recs.cpu().numpy()
-
             
-            print('random init.')
+            print('iter', it+1)
             print(f'loss: {loss(rating_mat, X, Y, C, l1)}')
             if not inference:
-                get_full_sort_score(answers, preds)
+                metrics, _ = get_full_sort_score(answers, preds)
+                if metrics[2] > recall:
+                    recall = metrics[2]
+                    np.save(f'model/user_vector_{feature_dim}.npy', X.cpu().numpy())
+                    np.save(f'model/item_vector_{feature_dim}.npy', Y.cpu().numpy())
+            else:
+                np.save(f'model/user_vector_{feature_dim}_inference.npy', X.cpu().numpy())
+                np.save(f'model/item_vector_{feature_dim}_inference.npy', Y.cpu().numpy())
 
-            for it in range(iter):
-                # xTx = X.T.matmul(X)
-                # yTy = Y.T.matmul(Y)
-
-                for u in tqdm(range(user_size)):
-                    # Cu = torch.diag(C[u])
-                    left = Y.T.mul(C[u]).matmul(Y) + lI
-                    right = Y.T.mul(C[u]).matmul(P[u])
-                    X[u] = torch.linalg.solve(left, right)
-
-                for i in tqdm(range(item_size)):
-                    # Ci = torch.diag(C[:, i])
-                    left = X.T.mul(C[:, i]).matmul(X) + lI
-                    right = X.T.mul(C[:, i]).matmul(P[:, i])
-                    Y[i] = torch.linalg.solve(left, right)
-
-                pred_rating_mat = torch.matmul(X, Y.T)
-                pred_rating_mat[rating_mat > 0] = 0.0
-                _, recs = torch.sort(pred_rating_mat, dim=-1, descending=True)
-                preds = recs.cpu().numpy()
-                
-                print('iter', it+1)
-                print(f'loss: {loss(rating_mat, X, Y, C, l1)}')
-                if not inference:
-                    get_full_sort_score(answers, preds)
-
-        return preds
+    return preds
 
 
 
@@ -154,7 +164,7 @@ def main(args):
 
     preds = als(
         rating_mat, 
-        answers, 
+        answers if not args.inference else None, 
         alpha=args.alpha, 
         l1= args.l1, 
         feature_dim=args.f, 
@@ -173,7 +183,8 @@ def main(args):
                 item_pred.append(idx2item[idx]) # 되돌리기
             item_preds.append(item_pred)
         item_preds = np.array(item_preds)
-        generate_submission_file(args.data_path, item_preds[:, :10])
+        time_info = (datetime.datetime.today() + datetime.timedelta(hours=9)).strftime('%m%d_%H%M')
+        generate_submission_file(args.data_path, item_preds[:, :30], 'mf', time_info, args.f)
         print('done.')
 
 

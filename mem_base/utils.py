@@ -8,6 +8,10 @@ import pandas as pd
 import torch
 from scipy.sparse import csr_matrix
 
+from tqdm import tqdm
+
+from typing import Tuple
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -21,45 +25,47 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
 
 
-def generate_rating_matrix_valid(user_seq, num_users, num_items):
-    # three lists are used to construct sparse matrix
-    row = []
-    col = []
-    data = []
-    for user_id, item_list in enumerate(user_seq):
-        for item in item_list[:-2]:  #
-            row.append(user_id)
-            col.append(item)
-            data.append(1)
+def get_full_sort_score(answers, pred_list): # baseline trainer에 있는 것 그대로 가져옴
+    recall, ndcg = [], []
+    for k in [5, 10]:
+        recall.append(recall_at_k(answers, pred_list, k))
+        ndcg.append(ndcg_k(answers, pred_list, k))
+    post_fix = {
+        "RECALL@5": "{:.4f}".format(recall[0]),
+        "NDCG@5": "{:.4f}".format(ndcg[0]),
+        "RECALL@10": "{:.4f}".format(recall[1]),
+        "NDCG@10": "{:.4f}".format(ndcg[1]),
+    }
+    print(post_fix)
 
-    row = np.array(row)
-    col = np.array(col)
-    data = np.array(data)
-    rating_matrix = csr_matrix((data, (row, col)), shape=(num_users, num_items))
-
-    return rating_matrix
+    return [recall[0], ndcg[0], recall[1], ndcg[1]], str(post_fix)
 
 
-def generate_rating_matrix_submission(user_seq, num_users, num_items):
-    # three lists are used to construct sparse matrix
-    row = []
-    col = []
-    data = []
-    for user_id, item_list in enumerate(user_seq):
-        for item in item_list[:]:  #
-            row.append(user_id)
-            col.append(item)
-            data.append(1)
+def get_sub_dataset(ratings: pd.DataFrame, n_valid) -> Tuple[pd.DataFrame, list]:
+    sub_users = []
+    sub_items = []
+    sub_answers = []
 
-    row = np.array(row)
-    col = np.array(col)
-    data = np.array(data)
-    rating_matrix = csr_matrix((data, (row, col)), shape=(num_users, num_items))
+    user_positives = ratings.groupby('user')['item'].apply(list)
+    for u, items in tqdm(user_positives.iteritems(), total=len(user_positives), desc='get subset'):
+        lasts = items[-1:]
+        cp_items = items[:-1]
+        random.shuffle(cp_items)
+        sub_answers.append(lasts + cp_items[-n_valid:])
+        for i in cp_items[:-n_valid]:
+            sub_users.append(u)
+            sub_items.append(i)
 
-    return rating_matrix
+    sub_ratings = pd.DataFrame(
+        {
+            'user': sub_users,
+            'item': sub_items,
+        }
+    )
+    return sub_ratings, sub_answers
 
 
-def generate_submission_file(data_file, preds):
+def generate_submission_file(data_file, preds, name, time_info, k):
 
     rating_df = pd.read_csv(data_file)
     users = rating_df["user"].unique()
@@ -71,51 +77,11 @@ def generate_submission_file(data_file, preds):
             result.append((users[index], item))
 
     pd.DataFrame(result, columns=["user", "item"]).to_csv(
-        "output/submission.csv", index=False
+        f"output/{name}_{time_info}_k{k}_submission.csv", index=False
     )
 
 
-def get_user_item_seqs(data_file):
-    rating_df = pd.read_csv(data_file)
-    lines = rating_df.groupby("user")["item"].apply(list)
-    user_seq = []
-    item_set = set()
-    for line in lines:
-        items = line
-        user_seq.append(items)
-        item_set = item_set | set(items)
-    max_item = max(item_set)
-
-    num_users = len(lines)
-    num_items = max_item + 2
-
-    lines = rating_df.groupby('item')['user'].apply(list)
-    item_seq = [line for lie in lines]
-
-    valid_rating_matrix = generate_rating_matrix_valid(user_seq, num_users, num_items)
-    submission_rating_matrix = generate_rating_matrix_submission(
-        user_seq, num_users, num_items
-    )
-    return (
-        user_seq,
-        item_seq,
-        valid_rating_matrix,
-        submission_rating_matrix,
-    )
-
-
-def get_metric(pred_list, topk=10):
-    NDCG = 0.0
-    HIT = 0.0
-    MRR = 0.0
-    # [batch] the answer's rank
-    for rank in pred_list:
-        MRR += 1.0 / (rank + 1.0)
-        if rank < topk:
-            NDCG += 1.0 / np.log2(rank + 2.0)
-            HIT += 1.0
-    return HIT / len(pred_list), NDCG / len(pred_list), MRR / len(pred_list)
-
+## METRICS ##
 
 def precision_at_k_per_sample(actual, predicted, topk):
     num_hits = 0
