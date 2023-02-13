@@ -1,8 +1,6 @@
 # Movie Recommendation
 
-대회에서는 implicit feedback 기반의 sequential recommendation 시나리오를 바탕으로 사용자의 time-ordred sequence에서 
-
-일부 item이 누락된 (dropout)된 상황을 상정하기 때문에, 마지막 아이템 예측 뿐만아니라 중간 아이템 또한 예측해야 한다.
+대회에서는 implicit feedback 기반의 sequential recommendation 시나리오를 바탕으로 사용자의 time-ordred sequence에서 일부 item이 누락된 (dropout)된 상황을 상정하기 때문에, 마지막 아이템 예측 뿐만아니라 중간 아이템 또한 예측해야 한다.
 
 ### 1-1. 프로젝트 소개
 
