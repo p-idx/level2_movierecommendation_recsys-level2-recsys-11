@@ -6,7 +6,7 @@
 
 ### 1-1. 프로젝트 소개
 
-<img src="https://user-images.githubusercontent.com/55279227/218377694-d1d7ca3d-139f-40d9-8ec6-22514ffdb720.png" width="1200" height="400"/>
+<img src="https://user-images.githubusercontent.com/55279227/218377694-d1d7ca3d-139f-40d9-8ec6-22514ffdb720.png" width="800" height="300"/>
 
 - 본 프로젝트는 **Movie Recommendation**, 즉 유저의 영화 시청 이력 데이터를 바탕으로 유저에게 볼 영화를 추천해주는 대회에서 솔루션을 제시한다.
 - Timestamp 정보가 들어간 implicit feedback 데이터를 통해 모든 유저에게 10개의 영화를 추천하여 추천 리스트의 정확성을 평가한다.
