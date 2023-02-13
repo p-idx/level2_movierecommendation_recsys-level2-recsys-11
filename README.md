@@ -57,19 +57,11 @@
 ## 2. 프로젝트 기획
 
 <img src="https://user-images.githubusercontent.com/55279227/218377992-c2af78bc-9b88-4f49-8cd7-2ca22c2eb760.jpg" width="500" height="500"/>
-- 지금까지 학습한 추천시스템의 전반적인 모델들을 구현, 사용
-    - General Model
-        - Memory based KNN, Matrix Factorization, Nueral Collaborative Filtering
-        - EASE, Multi Variate Auto Encoder
-        - UltraGCN
-    - Context-Aware Model
-        - DeepFM
-    - Sequencial Model
-        - S3rec
-- 베이스라인 분석, eda 진행, 대회 Validation Set 과 비슷한 Set 구성
-- 하드보팅 등 다양한 앙상블 기법 시도
+ - 지금까지 학습한 추천시스템의 전반적인 모델들을 구현, 사용
 
-- 각 모델별 결과 지표
+ - 베이스라인 분석, eda 진행, 대회 Validation Set 과 비슷한 Set 구성
+
+ - 하드보팅 등 다양한 앙상블 기법 시도
 <img src="https://user-images.githubusercontent.com/55279227/218378054-a4181bee-a6a4-4810-accd-0e130ba58a83.png" width="700" height="300"/>
 
 ## 3. 프로젝트 팀 구성 및 역할
