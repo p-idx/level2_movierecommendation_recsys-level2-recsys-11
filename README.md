@@ -1,7 +1,5 @@
 # Movie Recommendation
 
-대회에서는 implicit feedback 기반의 sequential recommendation 시나리오를 바탕으로 사용자의 time-ordred sequence에서 일부 item이 누락된 (dropout)된 상황을 상정하기 때문에, 마지막 아이템 예측 뿐만아니라 중간 아이템 또한 예측해야 한다.
-
 ### 1-1. 프로젝트 소개
 
 <img src="https://user-images.githubusercontent.com/55279227/218377694-d1d7ca3d-139f-40d9-8ec6-22514ffdb720.png" width="800" height="300"/>
@@ -15,10 +13,10 @@
     - 특정 시점을 기준으로 이후의 데이터를 전부 추출
     - 특정 시점을 기준으로 이전의 데이터 중 랜덤하게 추출
 
-- 위와 같이 데이터셋이 구성되어 있기 때문에, 단순 sequential한 예측에 최적화된 모델은 static 데이터의 예측에 약점을 보일 수 있고,
-    
-    반대로 static한 예측에 최적화된 모델은 sequential한 예측에 약점을 보일 수 있다.
-    
+- 위와 같이 데이터셋이 구성되어 있기 때문에, 단순 sequential한 예측에 최적화된 모델은 static 데이터의 예측에 약점을 보일 수 있고, 반대로 static한 예측에 최적화된 모델은 sequential한 예측에 약점을 보일 수 있다.
+
+- 대회에서는 implicit feedback 기반의 sequential recommendation 시나리오를 바탕으로 사용자의 time-ordred sequence에서 일부 item이 누락된 (dropout)된 상황을 상정하기 때문에, 마지막 아이템 예측 뿐만아니라 중간 아이템 또한 예측해야 한다.
+
 
 ### 1-2. 데이터 요약
 
