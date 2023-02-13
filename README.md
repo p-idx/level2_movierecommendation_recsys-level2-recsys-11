@@ -61,10 +61,14 @@
 <img src="https://user-images.githubusercontent.com/55279227/218378054-a4181bee-a6a4-4810-accd-0e130ba58a83.png" width="700" height="300"/>
 
 ## 3. 프로젝트 팀 구성 및 역할
+| [<img src="https://github.com/soso6079.png" width="100px">](https://github.com/soso6079) | [<img src="https://github.com/Zerotay.png" width="100px">](https://github.com/Zerotay) | [<img src="https://github.com/mbaek01.png" width="100px">](https://github.com/mbaek01) | [<img src="https://github.com/p-idx.png?v=4" width="100px">](https://github.com/p-idx) | [<img src="https://github.com/sj970806.png?v=4" width="100px">](https://github.com/sj970806) |  
+| :---: | :---: | :---: | :---: | :---: |  
+| [강수헌](https://github.com/soso6079) | [김동건](https://github.com/Zerotay) | [백승렬](https://github.com/mbaek01) | [양성훈](https://github.com/p-idx) | [유상준](https://github.com/sj970806) |
 
-- 양성훈:  베이스라인 분석, memory-based KNN, MF, BPR-MF, NMF 구현
 - 강수헌: DeepFM 구현 (negative-sampling, inference), Multi-VAE 구현, Top-k 앙상블 구현
 - 김동건: 베이스라인 코드 분석, BPR 논문 공부, 인기도 기반 추천,
     - RecBole 라이브러리를 사용하는 베이스라인 구축, RecBole을 사용하기 위한 다양한 기능 구현, RecBole을 통해 다양한 모델 테스트
-- 유상준: EDA, MultiVAE 베이스라인 작성, EASE 모델 공부, RecBole 라이브러리, wandb sweep 사용(DeepFM, SASRec 하이퍼파라미터 튜닝)
 - 백승렬: DeepFM 구현 (data preprocessing, validation step), UltraGCN 구현, Top-k inference 앙상블 method 구현
+- 양성훈:  베이스라인 분석, memory-based KNN, MF, BPR-MF, NMF 구현
+- 유상준: EDA, MultiVAE 베이스라인 작성, EASE 모델 공부, RecBole 라이브러리, wandb sweep 사용(DeepFM, SASRec 하이퍼파라미터 튜닝)
+
